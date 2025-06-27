@@ -192,6 +192,9 @@
     <div id="email-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded-lg w-96">
             <h3 class="text-xl font-bold mb-4 text-[#009ef4]">Email Your Calendar</h3>
+            <div class="mb-4 text-red-600 font-bold">
+                ⚠️ You must manually attach the downloaded PDF file to your email.
+            </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Recipient Email</label>
                 <input type="email" id="recipient-email" class="w-full p-2 border rounded">
@@ -202,6 +205,11 @@
             </div>
             <div class="mb-4 text-red-600 font-bold">
                 ⚠️ You must manually attach the downloaded PDF file to your email.
+            </div>
+            <div class="mb-4">
+                <button id="download-pdf-btn" class="w-full px-4 py-2 bg-[#959502] text-white rounded hover:bg-[#848400] mb-2">
+                    ➤ Download PDF Here First
+                </button>
             </div>
             <div class="flex justify-end space-x-2">
                 <button id="cancel-email" class="px-4 py-2 border rounded">Cancel</button>
@@ -249,6 +257,7 @@
             document.getElementById('cancel-email').addEventListener('click', () => {
                 document.getElementById('email-modal').classList.add('hidden');
             });
+            document.getElementById('download-pdf-btn').addEventListener('click', generatePDF);
             document.getElementById('send-email').addEventListener('click', sendEmail);
         });
         
