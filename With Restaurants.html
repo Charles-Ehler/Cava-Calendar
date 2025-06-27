@@ -3,436 +3,698 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAVA Area Leader 4-Week Calendar Tool</title>
+    <title>CAVA Area Leader Calendar Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #ffeab6;
+        }
+        
         .time-slot {
             height: 60px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
         }
-        .task {
-            transition: all 0.2s ease;
+        
+        .visit-tile {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-radius: 4px;
+            padding: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            cursor: move;
+            z-index: 10;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .task:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        
+        .visit-tile:hover {
+            opacity: 0.9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .qra-task {
-            background-color: #bf5700;
+        
+        .drop-zone {
+            position: relative;
         }
-        .coaching-task {
-            background-color: #6d712e;
+        
+        .drop-zone.highlight {
+            background-color: rgba(0, 158, 244, 0.1);
+            border: 2px dashed #009ef4;
         }
-        .draggable {
-            cursor: grab;
+        
+        .period-tab.active {
+            background-color: #009ef4;
+            color: white;
         }
-        .draggable:active {
-            cursor: grabbing;
+        
+        .period-tab.inactive {
+            background-color: #f9d000;
         }
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            .print-full-width {
-                width: 100% !important;
-            }
+        
+        .visit-bank {
+            scrollbar-width: thin;
+            scrollbar-color: #009ef4 #f9d000;
         }
+        
+        .visit-bank::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .visit-bank::-webkit-scrollbar-track {
+            background: #f9d000;
+            border-radius: 4px;
+        }
+        
+        .visit-bank::-webkit-scrollbar-thumb {
+            background-color: #009ef4;
+            border-radius: 4px;
+        }
+        
+        /* Print styles will be added dynamically */
     </style>
 </head>
-<body class="font-['Inter'] bg-[#f9f9f7] min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+<body class="min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-[#333]">CAVA Area Leader 4-Week Calendar Tool</h1>
-            <p class="text-lg text-[#666] mt-2">Plan your restaurant visits efficiently across 4-week periods</p>
-        </header>
-
-        <!-- Period Selector and Date Range -->
-        <div class="no-print">
-            <div class="flex overflow-x-auto pb-2 mb-6 scrollbar-hide">
-                <div class="flex space-x-1">
-                    <template id="period-tab-template">
-                        <button class="px-4 py-2 rounded-t-lg font-medium transition-colors duration-200" data-period="">
-                            Period <span class="period-number"></span>
-                        </button>
-                    </template>
-                </div>
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-[#009ef4]">CAVA Area Leader Calendar</h1>
+                <p class="text-[#959502]">Schedule your visits for the selected period</p>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                <h2 class="text-xl font-semibold text-[#333] mb-2">Selected Period: <span id="selected-period">1</span></h2>
-                <p class="text-[#666]">Date Range: <span id="date-range">Jan 1 - Jan 28, 2024</span></p>
-                <p class="text-[#666] mt-1">Visit Type: <span id="visit-type" class="font-medium">QRA Visit (5 hours)</span></p>
+            <img src="https://www.cava.com/_next/static/media/logo.4d4a2e3a.svg" alt="CAVA Logo" class="h-16">
+        </div>
+        
+        <!-- Period Tabs -->
+        <div class="mb-6 overflow-x-auto">
+            <div class="flex space-x-2 min-w-max">
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="1">P1</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="2">P2</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="3">P3</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="4">P4</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="5">P5</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="6">P6</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="7">P7</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="8">P8</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="9">P9</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="10">P10</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="11">P11</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="12">P12</div>
+                <div class="period-tab inactive px-4 py-2 rounded-t-lg cursor-pointer" data-period="13">P13</div>
             </div>
         </div>
-
+        
+        <!-- Toolbar -->
+        <div class="flex justify-between mb-4 no-print">
+            <div class="flex space-x-2">
+                <button id="print-btn" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800">Print Calendar</button>
+                <button id="pdf-btn" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800">Download PDF</button>
+                <button id="email-btn" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800">Email Calendar</button>
+                <button id="reset-btn" class="bg-[#da3d9d] text-white px-4 py-2 rounded hover:bg-[#c4378b]">Reset</button>
+            </div>
+            <div class="text-right">
+                <h3 id="current-period-display" class="font-bold text-lg text-[#009ef4]">Period 1: January 1 - January 28, 2025</h3>
+            </div>
+        </div>
+        
         <!-- Main Content -->
-        <div class="flex flex-col lg:flex-row gap-6">
-            <!-- Tasks Panel -->
-            <div class="no-print lg:w-1/4 bg-white p-4 rounded-lg shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-[#333]">Available Visits</h2>
-                    <div>
-                        <button id="reset-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">Reset</button>
-                    </div>
-                </div>
-                <div id="tasks-panel" class="space-y-3">
-                    <div class="task draggable qra-task p-3 rounded text-white font-medium cursor-move" draggable="true" data-type="qra" data-duration="5">
-                        <div class="flex justify-between items-center">
-                            <span>QRA Visit</span>
-                            <span class="text-xs bg-white/20 px-2 py-1 rounded">5h</span>
+        <div class="flex">
+            <!-- Visit Bank -->
+            <div class="w-64 bg-white rounded-lg shadow-md p-4 mr-4 no-print visit-bank" style="height: 600px; overflow-y: auto;">
+                <h2 class="text-xl font-bold mb-4 text-[#009ef4]">Visit Bank</h2>
+                
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2 text-[#959502]">QRA Visits</h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="visit-item bg-[#009ef4] text-white p-3 rounded cursor-move" draggable="true" data-type="qra" data-duration="5">
+                            QRA Visit (5h)
+                            <div class="text-xs mt-1">Remaining: <span id="qra-count">12</span></div>
                         </div>
-                        <input type="text" class="w-full mt-2 px-2 py-1 text-sm bg-white/20 placeholder-white/70 rounded border border-white/30 focus:outline-none focus:ring-1 focus:ring-white/50" placeholder="Restaurant name">
                     </div>
                 </div>
-                <div class="mt-6">
-                    <button id="print-btn" class="w-full py-2 bg-[#333] text-white rounded hover:bg-[#444] transition-colors">Print Calendar</button>
+                
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2 text-[#959502]">Coaching Visits</h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="visit-item bg-[#959502] text-white p-3 rounded cursor-move" draggable="true" data-type="coaching" data-duration="2">
+                            Coaching Visit (2h)
+                            <div class="text-xs mt-1">Remaining: <span id="coaching-count">8</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2 text-[#959502]">Cash Audits</h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="visit-item bg-[#bcdaff] text-black p-3 rounded cursor-move" draggable="true" data-type="cash-audit" data-duration="1">
+                            Cash Audit (1h)
+                            <div class="text-xs mt-1">Remaining: <span id="cash-audit-count">4</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2 text-[#959502]">Team Meetings</h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="visit-item bg-[#da3d9d] text-white p-3 rounded cursor-move" draggable="true" data-type="team-meeting" data-duration="1">
+                            Team Meeting (1h)
+                            <div class="text-xs mt-1">Remaining: <span id="team-meeting-count">6</span></div>
+                        </div>
+                        <div class="visit-item bg-[#e8b2ee] text-black p-3 rounded cursor-move" draggable="true" data-type="team-meeting" data-duration="2">
+                            Team Meeting (2h)
+                            <div class="text-xs mt-1">Remaining: <span id="team-meeting-2h-count">6</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Calendar -->
-            <div class="print-full-width lg:w-3/4 bg-white p-4 rounded-lg shadow-sm overflow-x-auto">
-                <div id="calendar" class="min-w-max">
-                    <!-- Calendar will be generated by JavaScript -->
+            
+            <!-- Calendar Grid -->
+            <div class="flex-1 bg-white rounded-lg shadow-md p-4 overflow-x-auto" style="height: 600px; overflow-y: auto;">
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                    <!-- Calendar columns will be generated by JavaScript -->
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Success Toast -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 hidden">
-        Calendar has been reset!
+    
+    <!-- Email Modal -->
+    <div id="email-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-lg w-96">
+            <h3 class="text-xl font-bold mb-4 text-[#009ef4]">Email Your Calendar</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Recipient Email</label>
+                <input type="email" id="recipient-email" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Message (optional)</label>
+                <textarea id="email-message" rows="3" class="w-full p-2 border rounded"></textarea>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-email" class="px-4 py-2 border rounded">Cancel</button>
+                <button id="send-email" class="px-4 py-2 bg-[#009ef4] text-white rounded hover:bg-[#0085d3]">Send</button>
+            </div>
+        </div>
     </div>
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Constants
-            const PERIODS = 13;
-            const WEEKS = 4;
-            const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const HOURS = 10; // 10 hours per day (8am-6pm)
-            const START_HOUR = 8; // 8am
+            // Initialize the calendar with Period 1
+            initializeCalendar(1);
             
-            // DOM Elements
-            const periodTabsContainer = document.querySelector('.flex.space-x-1');
-            const periodTabTemplate = document.getElementById('period-tab-template');
-            const selectedPeriodSpan = document.getElementById('selected-period');
-            const dateRangeSpan = document.getElementById('date-range');
-            const visitTypeSpan = document.getElementById('visit-type');
-            const tasksPanel = document.getElementById('tasks-panel');
-            const calendar = document.getElementById('calendar');
-            const resetBtn = document.getElementById('reset-btn');
-            const printBtn = document.getElementById('print-btn');
-            const toast = document.getElementById('toast');
-            
-            // State
-            let currentPeriod = 1;
-            let draggedTask = null;
-            let calendarData = {};
-            
-            // Initialize
-            createPeriodTabs();
-            generateCalendar();
-            setupEventListeners();
-            
-            // Functions
-            function createPeriodTabs() {
-                for (let i = 1; i <= PERIODS; i++) {
-                    const tab = periodTabTemplate.content.cloneNode(true);
-                    const button = tab.querySelector('button');
-                    const periodNumber = tab.querySelector('.period-number');
+            // Set up period tab click handlers
+            document.querySelectorAll('.period-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const period = parseInt(this.getAttribute('data-period'));
+                    initializeCalendar(period);
                     
-                    button.dataset.period = i;
-                    periodNumber.textContent = i;
-                    
-                    if (i === currentPeriod) {
-                        button.classList.add('bg-[#bf5700]', 'text-white');
-                    } else {
-                        button.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                    }
-                    
-                    periodTabsContainer.appendChild(tab);
-                }
-            }
-            
-            function getPeriodDates(period) {
-                // Simplified date calculation - in a real app, this would use actual dates
-                const startDate = new Date(2024, 0, 1);
-                startDate.setDate(startDate.getDate() + (period - 1) * 28);
-                
-                const endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 27);
-                
-                return {
-                    start: startDate,
-                    end: endDate
-                };
-            }
-            
-            function formatDate(date) {
-                const options = { month: 'short', day: 'numeric', year: 'numeric' };
-                return date.toLocaleDateString('en-US', options);
-            }
-            
-            function getVisitType(period) {
-                return [1, 5, 8, 11].includes(period) ? 
-                    { type: 'QRA Visit', duration: 5, color: 'qra', bgColor: '#bf5700' } : 
-                    { type: 'Coaching Visit', duration: 2, color: 'coaching', bgColor: '#6d712e' };
-            }
-            
-            function generateCalendar() {
-                calendar.innerHTML = '';
-                calendarData = {};
-                
-                const visitType = getVisitType(currentPeriod);
-                const dates = getPeriodDates(currentPeriod);
-                
-                // Update UI
-                selectedPeriodSpan.textContent = currentPeriod;
-                dateRangeSpan.textContent = `${formatDate(dates.start)} - ${formatDate(dates.end)}`;
-                visitTypeSpan.textContent = `${visitType.type} (${visitType.duration} hours)`;
-                
-                // Update tasks panel
-                tasksPanel.innerHTML = '';
-                for (let i = 0; i < 5; i++) {
-                    const task = document.createElement('div');
-                    task.className = `task draggable ${visitType.color}-task p-3 rounded text-white font-medium cursor-move`;
-                    task.draggable = true;
-                    task.dataset.type = visitType.color;
-                    task.dataset.duration = visitType.duration;
-                    
-                    task.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span>${visitType.type}</span>
-                            <span class="text-xs bg-white/20 px-2 py-1 rounded">${visitType.duration}h</span>
-                        </div>
-                        <input type="text" class="w-full mt-2 px-2 py-1 text-sm bg-white/20 placeholder-white/70 rounded border border-white/30 focus:outline-none focus:ring-1 focus:ring-white/50" placeholder="Restaurant name">
-                    `;
-                    
-                    tasksPanel.appendChild(task);
-                }
-                
-                // Generate calendar weeks
-                for (let week = 1; week <= WEEKS; week++) {
-                    const weekElement = document.createElement('div');
-                    weekElement.className = 'mb-8';
-                    
-                    const weekHeader = document.createElement('h3');
-                    weekHeader.className = 'text-lg font-semibold mb-2 text-[#333]';
-                    weekHeader.textContent = `Week ${week}`;
-                    weekElement.appendChild(weekHeader);
-                    
-                    const daysContainer = document.createElement('div');
-                    daysContainer.className = 'grid grid-cols-7 gap-1';
-                    
-                    // Generate days
-                    for (let day = 0; day < DAYS.length; day++) {
-                        const dayElement = document.createElement('div');
-                        dayElement.className = 'border rounded';
-                        
-                        const dayHeader = document.createElement('div');
-                        dayHeader.className = 'bg-gray-100 p-2 text-center font-medium text-[#333]';
-                        
-                        // Calculate date for this day
-                        const dayDate = new Date(dates.start);
-                        dayDate.setDate(dayDate.getDate() + ((week - 1) * 7) + day);
-                        
-                        dayHeader.textContent = `${DAYS[day]}, ${dayDate.getMonth() + 1}/${dayDate.getDate()}`;
-                        dayElement.appendChild(dayHeader);
-                        
-                        // Generate time slots
-                        const timeSlotsContainer = document.createElement('div');
-                        timeSlotsContainer.className = 'divide-y divide-gray-200';
-                        
-                        for (let hour = 0; hour < HOURS; hour++) {
-                            const timeSlot = document.createElement('div');
-                            timeSlot.className = 'time-slot relative';
-                            timeSlot.dataset.week = week;
-                            timeSlot.dataset.day = day;
-                            timeSlot.dataset.hour = hour;
-                            
-                            // Store reference in calendar data
-                            const slotId = `${week}-${day}-${hour}`;
-                            calendarData[slotId] = {
-                                element: timeSlot,
-                                occupied: false,
-                                task: null
-                            };
-                            
-                            // Time label
-                            const timeLabel = document.createElement('div');
-                            timeLabel.className = 'absolute top-1 left-1 text-xs text-gray-500';
-                            timeLabel.textContent = `${START_HOUR + hour}:00`;
-                            timeSlot.appendChild(timeLabel);
-                            
-                            timeSlotsContainer.appendChild(timeSlot);
-                        }
-                        
-                        dayElement.appendChild(timeSlotsContainer);
-                        daysContainer.appendChild(dayElement);
-                    }
-                    
-                    weekElement.appendChild(daysContainer);
-                    calendar.appendChild(weekElement);
-                }
-            }
-            
-            function setupEventListeners() {
-                // Period tabs
-                document.querySelectorAll('[data-period]').forEach(tab => {
-                    tab.addEventListener('click', function() {
-                        currentPeriod = parseInt(this.dataset.period);
-                        document.querySelectorAll('[data-period]').forEach(t => {
-                            t.classList.remove('bg-[#bf5700]', 'text-white');
-                            t.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                        });
-                        this.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                        this.classList.add('bg-[#bf5700]', 'text-white');
-                        
-                        generateCalendar();
+                    // Update active tab styling
+                    document.querySelectorAll('.period-tab').forEach(t => {
+                        t.classList.remove('active');
+                        t.classList.add('inactive');
                     });
+                    this.classList.remove('inactive');
+                    this.classList.add('active');
                 });
+            });
+            
+            // Set Period 1 as active initially
+            document.querySelector('.period-tab[data-period="1"]').classList.remove('inactive');
+            document.querySelector('.period-tab[data-period="1"]').classList.add('active');
+            
+            // Set up drag and drop
+            setupDragAndDrop();
+            
+            // Button event listeners
+            document.getElementById('print-btn').addEventListener('click', printCalendar);
+            document.getElementById('pdf-btn').addEventListener('click', generatePDF);
+            document.getElementById('email-btn').addEventListener('click', () => {
+                document.getElementById('email-modal').classList.remove('hidden');
+            });
+            document.getElementById('reset-btn').addEventListener('click', resetCalendar);
+            document.getElementById('cancel-email').addEventListener('click', () => {
+                document.getElementById('email-modal').classList.add('hidden');
+            });
+            document.getElementById('send-email').addEventListener('click', sendEmail);
+        });
+        
+        // Calendar data for each period (2025)
+        const periodData = {
+            1: { start: new Date(2025, 0, 1), end: new Date(2025, 0, 28), name: "Period 1: January 1 - January 28, 2025" },
+            2: { start: new Date(2025, 0, 29), end: new Date(2025, 1, 25), name: "Period 2: January 29 - February 25, 2025" },
+            3: { start: new Date(2025, 1, 26), end: new Date(2025, 2, 24), name: "Period 3: February 26 - March 24, 2025" },
+            4: { start: new Date(2025, 2, 25), end: new Date(2025, 3, 21), name: "Period 4: March 25 - April 21, 2025" },
+            5: { start: new Date(2025, 3, 22), end: new Date(2025, 4, 19), name: "Period 5: April 22 - May 19, 2025" },
+            6: { start: new Date(2025, 4, 20), end: new Date(2025, 5, 16), name: "Period 6: May 20 - June 16, 2025" },
+            7: { start: new Date(2025, 5, 17), end: new Date(2025, 6, 14), name: "Period 7: June 17 - July 14, 2025" },
+            8: { start: new Date(2025, 6, 15), end: new Date(2025, 7, 11), name: "Period 8: July 15 - August 11, 2025" },
+            9: { start: new Date(2025, 7, 12), end: new Date(2025, 8, 8), name: "Period 9: August 12 - September 8, 2025" },
+            10: { start: new Date(2025, 8, 9), end: new Date(2025, 9, 6), name: "Period 10: September 9 - October 6, 2025" },
+            11: { start: new Date(2025, 9, 7), end: new Date(2025, 10, 3), name: "Period 11: October 7 - November 3, 2025" },
+            12: { start: new Date(2025, 10, 4), end: new Date(2025, 11, 1), name: "Period 12: November 4 - December 1, 2025" },
+            13: { start: new Date(2025, 11, 2), end: new Date(2025, 11, 29), name: "Period 13: December 2 - December 29, 2025" }
+        };
+        
+        // Visit counts
+        const visitCounts = {
+            qra: 12,
+            coaching: 8,
+            'cash-audit': 4,
+            'team-meeting': 6,
+            'team-meeting-2h': 6
+        };
+        
+        // Scheduled visits storage
+        let scheduledVisits = {};
+        
+        function initializeCalendar(period) {
+            const periodInfo = periodData[period];
+            document.getElementById('current-period-display').textContent = periodInfo.name;
+            
+            // Clear existing calendar
+            const calendarGrid = document.getElementById('calendar-grid');
+            calendarGrid.innerHTML = '';
+            
+            // Generate day columns for the 4-week period
+            const currentDate = new Date(periodInfo.start);
+            const endDate = new Date(periodInfo.end);
+            
+            while (currentDate <= endDate) {
+                const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
+                const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
+                const monthName = currentDate.toLocaleString('default', { month: 'short' });
+                const dateNum = currentDate.getDate();
                 
-                // Drag and drop
-                document.addEventListener('dragstart', function(e) {
-                    if (e.target.classList.contains('draggable')) {
-                        draggedTask = e.target;
-                        e.target.classList.add('opacity-50');
-                        
-                        // Clone the task for drag image
-                        const dragImage = e.target.cloneNode(true);
-                        dragImage.style.width = `${e.target.offsetWidth}px`;
-                        dragImage.style.position = 'absolute';
-                        dragImage.style.top = '-9999px';
-                        document.body.appendChild(dragImage);
-                        e.dataTransfer.setDragImage(dragImage, 0, 0);
-                        
-                        setTimeout(() => {
-                            document.body.removeChild(dragImage);
-                        }, 0);
-                    }
-                });
+                // Create day column
+                const dayColumn = document.createElement('div');
+                dayColumn.className = 'day-column';
+                dayColumn.setAttribute('data-date', currentDate.toISOString().split('T')[0]);
                 
-                document.addEventListener('dragend', function(e) {
-                    if (e.target.classList.contains('draggable')) {
-                        e.target.classList.remove('opacity-50');
-                    }
-                });
+                // Day header
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'text-center font-bold mb-2 whitespace-nowrap text-sm';
+                dayHeader.textContent = `${dayName.substring(0,3)}, ${monthName} ${dateNum}`;
+                dayColumn.appendChild(dayHeader);
                 
-                document.addEventListener('dragover', function(e) {
-                    if (e.target.classList.contains('time-slot') && draggedTask) {
-                        e.preventDefault();
-                    }
-                });
-                
-                document.addEventListener('drop', function(e) {
-                    e.preventDefault();
+                // Time slots (8 AM to 6 PM)
+                for (let hour = 8; hour <= 18; hour++) {
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'time-slot drop-zone';
+                    timeSlot.setAttribute('data-hour', hour);
+                    timeSlot.setAttribute('data-date', currentDate.toISOString().split('T')[0]);
                     
-                    if (e.target.classList.contains('time-slot') && draggedTask) {
-                        const duration = parseInt(draggedTask.dataset.duration);
-                        const week = parseInt(e.target.dataset.week);
-                        const day = parseInt(e.target.dataset.day);
-                        const hour = parseInt(e.target.dataset.hour);
-                        
-                        // Check if slots are available
-                        let slotsAvailable = true;
-                        for (let i = 0; i < duration; i++) {
-                            const slotId = `${week}-${day}-${hour + i}`;
-                            if (!calendarData[slotId] || calendarData[slotId].occupied) {
-                                slotsAvailable = false;
-                                break;
-                            }
-                        }
-                        
-                        if (slotsAvailable) {
-                            // Create task element
-                            const taskElement = document.createElement('div');
-                            taskElement.className = `task absolute left-0 right-0 mx-1 px-2 py-1 rounded text-white text-sm font-medium ${draggedTask.dataset.type}-task`;
-                            taskElement.style.height = `${duration * 60 - 10}px`;
-                            taskElement.style.top = '10px';
-                            
-                            const restaurantName = draggedTask.querySelector('input').value || 'Unnamed Visit';
-                            taskElement.innerHTML = `
-                                <div class="flex justify-between items-center">
-                                    <span class="truncate">${restaurantName}</span>
-                                    <button class="delete-task text-xs bg-white/20 px-1 rounded hover:bg-white/30">✕</button>
-                                </div>
-                                <div class="text-xs mt-1">${draggedTask.dataset.type === 'qra' ? 'QRA' : 'Coaching'} Visit</div>
-                            `;
-                            
-                            // Mark slots as occupied
-                            for (let i = 0; i < duration; i++) {
-                                const slotId = `${week}-${day}-${hour + i}`;
-                                calendarData[slotId].occupied = true;
-                                calendarData[slotId].task = taskElement;
-                                
-                                if (i === 0) {
-                                    // Only append to the first slot
-                                    e.target.appendChild(taskElement);
-                                }
-                            }
-                            
-                            // Add delete functionality
-                            taskElement.querySelector('.delete-task').addEventListener('click', function() {
-                                for (let i = 0; i < duration; i++) {
-                                    const slotId = `${week}-${day}-${hour + i}`;
-                                    if (calendarData[slotId]) {
-                                        calendarData[slotId].occupied = false;
-                                        calendarData[slotId].task = null;
-                                    }
-                                }
-                                taskElement.remove();
-                            });
-                            
-                            // Make task draggable for repositioning
-                            taskElement.draggable = true;
-                            taskElement.dataset.week = week;
-                            taskElement.dataset.day = day;
-                            taskElement.dataset.hour = hour;
-                            taskElement.dataset.duration = duration;
-                            taskElement.dataset.type = draggedTask.dataset.type;
-                            
-                            taskElement.addEventListener('dragstart', function(e) {
-                                draggedTask = this;
-                                this.classList.add('opacity-50');
-                                
-                                // Store original position
-                                this.dataset.originalWeek = week;
-                                this.dataset.originalDay = day;
-                                this.dataset.originalHour = hour;
-                            });
-                            
-                            taskElement.addEventListener('dragend', function() {
-                                this.classList.remove('opacity-50');
-                            });
+                    // Time label
+                    const timeLabel = document.createElement('div');
+                    timeLabel.className = 'text-xs text-gray-500';
+                    timeLabel.textContent = `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
+                    timeSlot.appendChild(timeLabel);
+                    
+                    // Check if there's a scheduled visit for this time slot
+                    const dateKey = currentDate.toISOString().split('T')[0];
+                    if (scheduledVisits[dateKey]) {
+                        const visit = scheduledVisits[dateKey].find(v => v.startHour === hour);
+                        if (visit) {
+                            const visitTile = createVisitTile(visit.type, hour, visit.duration, false);
+                            timeSlot.appendChild(visitTile);
                         }
                     }
                     
-                    draggedTask = null;
-                });
+                    dayColumn.appendChild(timeSlot);
+                }
                 
-                // Reset button
-                resetBtn.addEventListener('click', function() {
-                    generateCalendar();
+                calendarGrid.appendChild(dayColumn);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+        
+        function setupDragAndDrop() {
+            const visitItems = document.querySelectorAll('.visit-item');
+            
+            visitItems.forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                        type: this.getAttribute('data-type'),
+                        duration: parseInt(this.getAttribute('data-duration'))
+                    }));
+                    e.dataTransfer.effectAllowed = 'copy';
                     
-                    // Show toast
-                    toast.classList.remove('hidden');
-                    toast.classList.remove('translate-y-10', 'opacity-0');
-                    toast.classList.add('translate-y-0', 'opacity-100');
-                    
+                    // Add visual feedback
                     setTimeout(() => {
-                        toast.classList.remove('translate-y-0', 'opacity-100');
-                        toast.classList.add('translate-y-10', 'opacity-0');
-                        setTimeout(() => toast.classList.add('hidden'), 300);
-                    }, 3000);
+                        this.classList.add('opacity-0');
+                    }, 0);
                 });
                 
-                // Print button
-                printBtn.addEventListener('click', function() {
-                    window.print();
+                item.addEventListener('dragend', function() {
+                    this.classList.remove('opacity-0');
+                });
+            });
+            
+            const dropZones = document.getElementById('calendar-grid');
+            
+            dropZones.addEventListener('dragover', function(e) {
+                if (e.target.classList.contains('drop-zone')) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    e.target.classList.add('highlight');
+                }
+            });
+            
+            dropZones.addEventListener('dragleave', function(e) {
+                if (e.target.classList.contains('drop-zone')) {
+                    e.target.classList.remove('highlight');
+                }
+            });
+            
+            dropZones.addEventListener('drop', function(e) {
+                if (e.target.classList.contains('drop-zone')) {
+                    e.preventDefault();
+                    e.target.classList.remove('highlight');
+                    
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    const type = data.type;
+                    const duration = data.duration;
+                    const hour = parseInt(e.target.getAttribute('data-hour'));
+                    const date = e.target.getAttribute('data-date');
+                    
+                    // Check if time slot is available
+                    if (isTimeSlotAvailable(date, hour, duration)) {
+                        // Decrement visit count
+                        const countId = type === 'team-meeting' && duration === 2 ? 'team-meeting-2h-count' : `${type}-count`;
+                        const countElement = document.getElementById(countId);
+                        let count = parseInt(countElement.textContent);
+                        
+                        if (count > 0) {
+                            count--;
+                            countElement.textContent = count;
+                            
+                            // Create and add visit tile
+                            const visitTile = createVisitTile(type, hour, duration, true);
+                            e.target.appendChild(visitTile);
+                            
+                            // Store the scheduled visit
+                            if (!scheduledVisits[date]) {
+                                scheduledVisits[date] = [];
+                            }
+                            
+                            scheduledVisits[date].push({
+                                type: type,
+                                startHour: hour,
+                                duration: duration
+                            });
+                        } else {
+                            alert(`No more ${type} visits available!`);
+                        }
+                    } else {
+                        alert('This time slot is already occupied or not enough time available!');
+                    }
+                }
+            });
+        }
+        
+        function isTimeSlotAvailable(date, startHour, duration) {
+            // Check if visit extends beyond working hours
+            if (startHour + duration > 19) return false; // 18:00 is last slot (6PM)
+            
+            // If no visits scheduled for this date, it's available
+            if (!scheduledVisits[date]) return true;
+            
+            // Check each hour in the duration for conflicts
+            for (let i = 0; i < duration; i++) {
+                const hourToCheck = startHour + i;
+                const isOccupied = scheduledVisits[date].some(visit => {
+                    // Check if current hour falls within any existing visit
+                    return hourToCheck >= visit.startHour && 
+                           hourToCheck < visit.startHour + visit.duration;
+                });
+                
+                if (isOccupied) return false;
+            }
+            
+            return true;
+        }
+        
+        function createVisitTile(type, startHour, duration, isDraggable) {
+            const tile = document.createElement('div');
+            tile.className = 'visit-tile cursor-pointer';
+            
+            // Set color based on type
+            let bgColor, textColor = 'white';
+            switch(type) {
+                case 'qra':
+                    bgColor = '#009ef4';
+                    break;
+                case 'coaching':
+                    bgColor = '#959502';
+                    break;
+                case 'cash-audit':
+                    bgColor = '#bcdaff';
+                    textColor = 'black';
+                    break;
+                case 'team-meeting':
+                    bgColor = duration === 2 ? '#e8b2ee' : '#da3d9d';
+                    textColor = duration === 2 ? 'black' : 'white';
+                    break;
+            }
+            
+            tile.style.backgroundColor = bgColor;
+            tile.style.color = textColor;
+            tile.style.height = `${duration * 60 - 8}px`; // Subtract padding
+            
+            // Set content
+            let typeName = '';
+            switch(type) {
+                case 'qra': typeName = 'QRA Visit'; break;
+                case 'coaching': typeName = 'Coaching Visit'; break;
+                case 'cash-audit': typeName = 'Cash Audit'; break;
+                case 'team-meeting': typeName = 'Team Meeting'; break;
+            }
+            
+            const endHour = startHour + duration;
+            const startTime = `${startHour > 12 ? startHour - 12 : startHour}:00 ${startHour >= 12 ? 'PM' : 'AM'}`;
+            const endTime = `${endHour > 12 ? endHour - 12 : endHour}:00 ${endHour >= 12 ? 'PM' : 'AM'}`;
+            
+            tile.innerHTML = `
+                <div class="font-bold">${typeName}</div>
+                <div class="text-xs">${startTime} - ${endTime}</div>
+            `;
+            
+            if (isDraggable) {
+                tile.setAttribute('draggable', 'true');
+                // Click to remove functionality
+                tile.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const timeSlot = e.target.closest('.time-slot');
+                    const date = timeSlot.getAttribute('data-date');
+                    const hour = parseInt(timeSlot.getAttribute('data-hour'));
+                    
+                    // Remove from scheduled visits
+                    if (scheduledVisits[date]) {
+                        scheduledVisits[date] = scheduledVisits[date].filter(v => 
+                            !(v.startHour === hour && v.type === type && v.duration === duration)
+                        );
+                        
+                        // If no more visits on this date, remove the date entry
+                        if (scheduledVisits[date].length === 0) {
+                            delete scheduledVisits[date];
+                        }
+                        
+                        // Increment visit count
+                        const countId = type === 'team-meeting' && duration === 2 ? 'team-meeting-2h-count' : `${type}-count`;
+                        const countElement = document.getElementById(countId);
+                        let count = parseInt(countElement.textContent);
+                        count++;
+                        countElement.textContent = count;
+                        
+                        // Remove the tile
+                        this.remove();
+                    }
+                });
+
+                tile.addEventListener('dragstart', function(e) {
+                    e.stopPropagation();
+                    this.remove();
+                    
+                    // Remove from scheduled visits
+                    const date = e.target.closest('.time-slot').getAttribute('data-date');
+                    const hour = parseInt(e.target.closest('.time-slot').getAttribute('data-hour'));
+                    
+                    if (scheduledVisits[date]) {
+                        scheduledVisits[date] = scheduledVisits[date].filter(v => 
+                            !(v.startHour === hour && v.type === type && v.duration === duration)
+                        );
+                        
+                        // Increment visit count
+                        const countId = type === 'team-meeting' && duration === 2 ? 'team-meeting-2h-count' : `${type}-count`;
+                        const countElement = document.getElementById(countId);
+                        let count = parseInt(countElement.textContent);
+                        count++;
+                        countElement.textContent = count;
+                    }
                 });
             }
-        });
+            
+            return tile;
+        }
+        
+        function printCalendar() {
+            // Add print-specific class to body
+            document.body.classList.add('printing');
+            
+            // Set up print styles
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    .printing #calendar-grid, 
+                    .printing #calendar-grid * {
+                        visibility: visible;
+                    }
+                    .printing #calendar-grid {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: auto;
+                        background: white;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    .visit-tile {
+                        border: 1px solid #333 !important;
+                        color: #333 !important;
+                        background-color: white !important;
+                    }
+                    .time-slot {
+                        border-bottom: 1px solid #ccc !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Trigger print dialog
+            window.print();
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.classList.remove('printing');
+                style.remove();
+            }, 1000);
+        }
+        
+        function generatePDF() {
+            // Create a print version first
+            printCalendar();
+            
+            // Use html2canvas to capture the print section
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById('print-section');
+            
+            html2canvas(element).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // Calculate image dimensions to fit on A4
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                // Add first page
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // Add additional pages if needed
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Get period info for filename
+                const periodTitle = document.getElementById('current-period-display').textContent;
+                const periodMatch = periodTitle.match(/Period (\d+): (.*?) - (.*?),/);
+                const periodNum = periodMatch[1];
+                const startDate = periodMatch[2].replace(/ /g, '');
+                const endDate = periodMatch[3].replace(/ /g, '');
+                
+                pdf.save(`CAVA_Calendar_Period${periodNum}_${startDate}-${endDate}.pdf`);
+            });
+        }
+        
+        function sendEmail() {
+            const email = document.getElementById('recipient-email').value;
+            const message = document.getElementById('email-message').value;
+            
+            if (!email) {
+                alert('Please enter a recipient email address');
+                return;
+            }
+            
+            // Get current period info for subject
+            const periodInfo = document.getElementById('current-period-display').textContent;
+            const periodMatch = periodInfo.match(/Period (\d+): (.*?) - (.*?),/);
+            const periodNum = periodMatch[1];
+            const startDate = periodMatch[2];
+            const endDate = periodMatch[3];
+            
+            // First generate the PDF
+            generatePDF();
+            
+            // Create mailto link
+            const subject = `CAVA Calendar - Period ${periodNum} (${startDate} - ${endDate})`;
+            const body = `${message || 'Please find attached my scheduled visits calendar.'}\n\nNote: You'll need to manually attach the downloaded PDF file to this email.`;
+            
+            const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Open email client after a short delay to allow PDF generation
+            setTimeout(() => {
+                window.location.href = mailtoLink;
+            }, 1000);
+            
+            // Close modal
+            document.getElementById('email-modal').classList.add('hidden');
+            
+            // Clear form
+            document.getElementById('recipient-email').value = '';
+            document.getElementById('email-message').value = '';
+        }
+        
+        function resetCalendar() {
+            if (confirm('Are you sure you want to reset the calendar? All scheduled visits will be lost.')) {
+                // Reset visit counts
+                visitCounts.qra = 12;
+                visitCounts.coaching = 8;
+                visitCounts['cash-audit'] = 4;
+                visitCounts['team-meeting'] = 6;
+                visitCounts['team-meeting-2h'] = 6;
+                
+                document.getElementById('qra-count').textContent = '12';
+                document.getElementById('coaching-count').textContent = '8';
+                document.getElementById('cash-audit-count').textContent = '4';
+                document.getElementById('team-meeting-count').textContent = '6';
+                document.getElementById('team-meeting-2h-count').textContent = '6';
+                
+                // Clear scheduled visits
+                scheduledVisits = {};
+                
+                // Reinitialize calendar
+                const activeTab = document.querySelector('.period-tab.active');
+                const period = parseInt(activeTab.getAttribute('data-period'));
+                initializeCalendar(period);
+            }
+        }
     </script>
 </body>
 </html>
