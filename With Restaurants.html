@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area Leader Calendar Tool</title>
+    <title>CAVA Area Leader Calendar Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -81,14 +81,14 @@
     </style>
 </head>
 <body class="min-h-screen p-4">
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-7xl mx-auto my-8">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-[#009ef4]">CAVA Area Leader Calendar</h1>
                 <p class="text-[#959502]">Schedule your visits for the selected period</p>
             </div>
-            <img src="https://cdn.brandfetch.io/idI9TqJPtf/w/400/h/400/theme/dark/icon.jpeg?c=1dxbfHSJFAPEGdCLU4o5B" alt="CAVA Logo" class="h-12 w-12 object-contain mr-4">
+            <img src="https://www.cava.com/_next/static/media/logo.4d4a2e3a.svg" alt="CAVA Logo" class="h-16">
         </div>
         
         <!-- Period Tabs -->
@@ -126,7 +126,7 @@
         <!-- Main Content -->
         <div class="flex">
             <!-- Visit Bank -->
-            <div class="w-64 bg-white rounded-lg shadow-md p-4 mr-4 no-print visit-bank" style="height: 600px; overflow-y: auto;">
+            <div class="w-64 bg-white rounded-lg shadow-md p-4 mr-4 no-print visit-bank" style="max-height: 80vh; overflow-y: auto; position: sticky; top: 20px;">
                 <h2 class="text-xl font-bold mb-4 text-[#009ef4]">Visit Bank</h2>
                 
                 <div class="mb-6">
@@ -134,6 +134,7 @@
                     <div class="grid grid-cols-1 gap-2">
                         <div class="visit-item bg-[#009ef4] text-white p-3 rounded cursor-move" draggable="true" data-type="qra" data-duration="5">
                             QRA Visit (5h)
+                            <input type="text" class="restaurant-input w-full mt-1 p-1 text-xs text-black rounded" placeholder="Restaurant Name" draggable="false">
                             <div class="text-xs mt-1">Remaining: <span id="qra-count">12</span></div>
                         </div>
                     </div>
@@ -144,6 +145,7 @@
                     <div class="grid grid-cols-1 gap-2">
                         <div class="visit-item bg-[#959502] text-white p-3 rounded cursor-move" draggable="true" data-type="coaching" data-duration="2">
                             Coaching Visit (2h)
+                            <input type="text" class="restaurant-input w-full mt-1 p-1 text-xs text-black rounded" placeholder="Restaurant Name">
                             <div class="text-xs mt-1">Remaining: <span id="coaching-count">8</span></div>
                         </div>
                     </div>
@@ -154,6 +156,7 @@
                     <div class="grid grid-cols-1 gap-2">
                         <div class="visit-item bg-[#bcdaff] text-black p-3 rounded cursor-move" draggable="true" data-type="cash-audit" data-duration="1">
                             Cash Audit (1h)
+                            <input type="text" class="restaurant-input w-full mt-1 p-1 text-xs text-black rounded" placeholder="Restaurant Name">
                             <div class="text-xs mt-1">Remaining: <span id="cash-audit-count">4</span></div>
                         </div>
                     </div>
@@ -164,10 +167,12 @@
                     <div class="grid grid-cols-1 gap-2">
                         <div class="visit-item bg-[#da3d9d] text-white p-3 rounded cursor-move" draggable="true" data-type="team-meeting" data-duration="1">
                             Team Meeting (1h)
+                            <input type="text" class="restaurant-input w-full mt-1 p-1 text-xs text-black rounded" placeholder="Restaurant Name">
                             <div class="text-xs mt-1">Remaining: <span id="team-meeting-count">6</span></div>
                         </div>
                         <div class="visit-item bg-[#e8b2ee] text-black p-3 rounded cursor-move" draggable="true" data-type="team-meeting" data-duration="2">
                             Team Meeting (2h)
+                            <input type="text" class="restaurant-input w-full mt-1 p-1 text-xs text-black rounded" placeholder="Restaurant Name">
                             <div class="text-xs mt-1">Remaining: <span id="team-meeting-2h-count">6</span></div>
                         </div>
                     </div>
@@ -175,8 +180,8 @@
             </div>
             
             <!-- Calendar Grid -->
-            <div class="flex-1 bg-white rounded-lg shadow-md p-4 overflow-x-auto" style="height: 600px; overflow-y: auto;">
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+            <div class="flex-1 bg-white rounded-lg shadow-md p-4 overflow-x-auto">
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 min-h-[600px]">
                     <!-- Calendar columns will be generated by JavaScript -->
                 </div>
             </div>
@@ -338,16 +343,21 @@
             
             visitItems.forEach(item => {
                 item.addEventListener('dragstart', function(e) {
-                    e.dataTransfer.setData('text/plain', JSON.stringify({
-                        type: this.getAttribute('data-type'),
-                        duration: parseInt(this.getAttribute('data-duration'))
-                    }));
-                    e.dataTransfer.effectAllowed = 'copy';
-                    
-                    // Add visual feedback
-                    setTimeout(() => {
-                        this.classList.add('opacity-0');
-                    }, 0);
+                    // Only allow drag from the main item, not the input
+                    if (e.target === this) {
+                        const restaurantName = this.querySelector('.restaurant-input').value || 'No Restaurant Name';
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                            type: this.getAttribute('data-type'),
+                            duration: parseInt(this.getAttribute('data-duration')),
+                            restaurant: restaurantName
+                        }));
+                        e.dataTransfer.effectAllowed = 'copy';
+                        
+                        // Add visual feedback
+                        setTimeout(() => {
+                            this.classList.add('opacity-0');
+                        }, 0);
+                    }
                 });
                 
                 item.addEventListener('dragend', function() {
@@ -393,8 +403,8 @@
                             count--;
                             countElement.textContent = count;
                             
-                            // Create and add visit tile
-                            const visitTile = createVisitTile(type, hour, duration, true);
+                            // Create and add visit tile with restaurant name
+                            const visitTile = createVisitTile(type, hour, duration, true, data.restaurant);
                             e.target.appendChild(visitTile);
                             
                             // Store the scheduled visit
@@ -439,7 +449,7 @@
             return true;
         }
         
-        function createVisitTile(type, startHour, duration, isDraggable) {
+        function createVisitTile(type, startHour, duration, isDraggable, restaurantName = 'No Restaurant Name') {
             const tile = document.createElement('div');
             tile.className = 'visit-tile cursor-pointer';
             
@@ -481,6 +491,7 @@
             
             tile.innerHTML = `
                 <div class="font-bold">${typeName}</div>
+                <div class="text-xs font-semibold">${restaurantName}</div>
                 <div class="text-xs">${startTime} - ${endTime}</div>
             `;
             
