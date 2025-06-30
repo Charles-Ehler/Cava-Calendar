@@ -602,7 +602,7 @@
                 const isShortDuration = type.duration <= 1.5;
                 
                 const tile = document.createElement('div');
-                tile.className = `visit-tile ${type.color} p-2 rounded-md h-28 flex flex-col justify-between font-medium leading-tight`;
+                tile.className = `visit-tile ${type.color} p-1.5 rounded-md h-21 flex flex-col justify-between font-medium leading-tight`;
                 tile.dataset.type = type.id;
                 tile.dataset.duration = type.duration;
                 tile.dataset.location = location;
@@ -611,18 +611,18 @@
                 tile.addEventListener('dragstart', handleDragStart);
                 
                 const tileTitle = document.createElement('div');
-                tileTitle.className = 'font-bold text-sm truncate';
+                tileTitle.className = 'font-bold text-xs truncate';
                 tileTitle.textContent = type.name;
                 tileTitle.title = type.name;
                 
                 const tileLocation = document.createElement('div');
-                tileLocation.className = 'text-xs';
+                tileLocation.className = 'text-[10px]';
                 tileLocation.textContent = location;
                 tileLocation.title = location;
                 
                 // Add counter display
                 const counter = document.createElement('div');
-                counter.className = `text-xs ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
+                counter.className = `text-[10px] ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
                 counter.innerHTML = `
                     <div class="flex justify-between text-[10px]">
                         <span>Required</span>
@@ -637,7 +637,7 @@
                 `;
                 
                 const durationText = document.createElement('div');
-                durationText.className = `text-xs ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
+                durationText.className = `text-[10px] ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
                 // Format duration display
                 let durationTextStr;
                 if (type.duration % 1 === 0) {
