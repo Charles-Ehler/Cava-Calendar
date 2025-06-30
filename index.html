@@ -461,6 +461,24 @@
                 return `${dayName} ${month}/${day}`;
             }
 
+            // Format date as "M/D" (compact version)
+            function formatDateCompact(date) {
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                return `${month}/${day}`;
+            }
+
+            // Get week date range
+            function getWeekDateRange(startDate, weekNum) {
+                const weekStart = new Date(startDate);
+                weekStart.setDate(weekStart.getDate() + (weekNum - 1) * 7);
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                
+                return `${formatDateCompact(weekStart)}–${formatDateCompact(weekEnd)}`;
+            }
+
             // Track remaining uses for each visit type
             const remainingUses = {};
 
@@ -611,7 +629,23 @@
                     // Week label
                     const weekLabel = document.createElement('div');
                     weekLabel.className = 'text-lg font-bold text-[#009ef4] mb-2 sticky top-0 bg-white z-10';
-                    weekLabel.textContent = `Week ${week}`;
+                    const weekRange = getWeekDateRange(period.startDate, week);
+                    
+                    // Create name span if name exists
+                    let nameSpan = '';
+                    if (userName) {
+                        nameSpan = document.createElement('span');
+                        nameSpan.className = 'font-bold text-[#ff9d77]';
+                        nameSpan.textContent = ` – ${userName}`;
+                    }
+                    
+                    // Set base content
+                    weekLabel.textContent = `Week ${week} – ${weekRange}`;
+                    
+                    // Append name if exists
+                    if (userName) {
+                        weekLabel.appendChild(nameSpan);
+                    }
                     weekContainer.appendChild(weekLabel);
                     
                     // Calendar grid
