@@ -72,6 +72,7 @@
                     </div>
                 </div>
                 <div class="ml-4">
+                    <label for="userName" class="block text-sm font-medium text-gray-700 mb-1" style="color: #4B5563; font-weight: 500;">Enter Your Name</label>
                     <input type="text" id="userName" class="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009ef4]" placeholder="Your Name">
                 </div>
             </div>
@@ -476,7 +477,7 @@
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekEnd.getDate() + 6);
                 
-                return `${formatDateCompact(weekStart)}–${formatDateCompact(weekEnd)}`;
+                return `${formatDateCompact(weekStart)} through ${formatDateCompact(weekEnd)}`;
             }
 
             // Track remaining uses for each visit type
@@ -629,21 +630,22 @@
                     // Week label
                     const weekLabel = document.createElement('div');
                     weekLabel.className = 'text-lg font-bold text-[#009ef4] mb-2 sticky top-0 bg-white z-10';
-                    const weekRange = getWeekDateRange(period.startDate, week);
+                    const weekRange = getWeekDateRange(period.startDate, week).replace('–', 'through');
                     
-                    // Create name span if name exists
-                    let nameSpan = '';
+                    // Build label content
+                    weekLabel.innerHTML = `Week ${week} <span class="text-black">–</span> ${weekRange}`;
+                    
+                    // Add name if provided
                     if (userName) {
-                        nameSpan = document.createElement('span');
+                        const nameSeparator = document.createElement('span');
+                        nameSeparator.className = 'text-black';
+                        nameSeparator.textContent = ' – ';
+                        
+                        const nameSpan = document.createElement('span');
                         nameSpan.className = 'font-bold text-[#ff9d77]';
-                        nameSpan.textContent = ` – ${userName}`;
-                    }
-                    
-                    // Set base content
-                    weekLabel.textContent = `Week ${week} – ${weekRange}`;
-                    
-                    // Append name if exists
-                    if (userName) {
+                        nameSpan.textContent = userName;
+                        
+                        weekLabel.appendChild(nameSeparator);
                         weekLabel.appendChild(nameSpan);
                     }
                     weekContainer.appendChild(weekLabel);
@@ -766,8 +768,8 @@
                         visit.week === week &&
                         visit.day === day &&
                         ((startHour >= visit.hour && startHour < visitEndHour) ||
-                         (endHour > visit.hour && endHour <= visitEndHour) ||
-                         (startHour <= visit.hour && endHour >= visitEndHour))
+                        (endHour > visit.hour && endHour <= visitEndHour) ||
+                        (startHour <= visit.hour && endHour >= visitEndHour))
                     );
                 });
                 
@@ -828,9 +830,9 @@
                         <span>${visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1}</span>
                         <span>${periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}</span>
                         <span class="${((visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1) - 
-                              periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length) < 0 ? 'text-red-500' : ''}">
+                            periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length) < 0 ? 'text-red-500' : ''}">
                             ${(visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1) - 
-                              periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}
+                            periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}
                         </span>
                     </div>
                 `;
@@ -854,9 +856,9 @@
                     // Remove from scheduled visits
                     periodData[currentPeriod].scheduledVisits = periodData[currentPeriod].scheduledVisits.filter(v => 
                         !(v.date === visit.date && 
-                          v.hour === visit.hour &&
-                          v.week === visit.week &&
-                          v.day === visit.day)
+                        v.hour === visit.hour &&
+                        v.week === visit.week &&
+                        v.day === visit.day)
                     );
                     saveToSessionStorage();
                     
