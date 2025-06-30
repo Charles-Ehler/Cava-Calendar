@@ -112,18 +112,20 @@
 
             <!-- Calendar -->
             <main class="w-full lg:w-3/4 bg-white p-4 rounded-lg shadow-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-[#009ef4]">
-                        <span id="currentPeriodDisplay">P13</span>: 
-                        <span id="dateRangeDisplay">Dec 1 - Dec 28, 2025</span>
-                    </h2>
-                    <div class="flex gap-2 items-center justify-end">
-                        <button id="downloadButton" class="no-print px-4 py-2 bg-[#009ef4] text-white rounded-md hover:bg-[#0083d1] focus:outline-none focus:ring-2 focus:ring-[#009ef4] font-medium">
-                            Download Calendar (PDF)
-                        </button>
-                        <button id="resetButton" class="no-print px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium">
-                            Reset Calendar
-                        </button>
+                <div class="sticky top-0 z-50 bg-white border-b border-gray-200 py-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-[#009ef4]">
+                            <span id="currentPeriodDisplay">P13</span>: 
+                            <span id="dateRangeDisplay">Dec 1 - Dec 28, 2025</span>
+                        </h2>
+                        <div class="flex gap-2 items-center justify-end">
+                            <button id="downloadButton" class="no-print px-4 py-2 bg-[#009ef4] text-white rounded-md hover:bg-[#0083d1] focus:outline-none focus:ring-2 focus:ring-[#009ef4] font-medium">
+                                Download Calendar (PDF)
+                            </button>
+                            <button id="resetButton" class="no-print px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium">
+                                Reset Calendar
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -862,14 +864,50 @@
                 
                 for (let i = 0; i < weeks.length; i++) {
                     const week = weeks[i];
-                    const canvas = await html2canvas(week, {
-                        scale: 2,
+                    // Clone the week element to avoid affecting the original
+                    const weekClone = week.cloneNode(true);
+                    weekClone.style.position = 'absolute';
+                    weekClone.style.left = '-9999px';
+                    weekClone.style.top = '0';
+                    weekClone.style.width = week.offsetWidth + 'px';
+                    document.body.appendChild(weekClone);
+                    
+                    // Add extra space for headers
+                    const headerHeight = 60;
+                    weekClone.style.paddingTop = headerHeight + 'px';
+                    
+                    const canvas = await html2canvas(weekClone, {
+                        scale: window.devicePixelRatio * 2,
                         logging: false,
                         useCORS: true,
                         allowTaint: true,
                         scrollX: 0,
-                        scrollY: 0
+                        scrollY: -headerHeight,
+                        windowHeight: weekClone.scrollHeight + headerHeight,
+                        ignoreElements: (element) => {
+                            // Skip elements that shouldn't affect layout
+                            return element.classList.contains('no-print');
+                        },
+                        onclone: (clonedDoc) => {
+                            // Preserve all styles and dimensions
+                            clonedDoc.querySelectorAll('.visit-tile').forEach(tile => {
+                                tile.style.width = '100%';
+                                tile.style.boxSizing = 'border-box';
+                            });
+                            
+                            // Make sure headers are visible
+                            const headers = clonedDoc.querySelectorAll('.sticky.top-0');
+                            headers.forEach(header => {
+                                header.style.position = 'static';
+                                header.style.zIndex = 'auto';
+                            });
+                            
+                            // Force layout recalculation
+                            clonedDoc.body.offsetHeight;
+                        }
                     });
+                    
+                    document.body.removeChild(weekClone);
                     
                     const imgData = canvas.toDataURL('image/png');
                     const imgWidth = 210; // A4 width in mm
@@ -886,7 +924,14 @@
                     }
                 }
                 
-                pdf.save('CAVA-Calendar.pdf');
+                // Generate filename with period and user name
+                const periodStr = `P${currentPeriod}`;
+                const userNameStr = userName.replace(/\s+/g, '') || ''; // Remove spaces if present
+                const filename = userNameStr 
+                    ? `CAVA-Calendar-${periodStr}-${userNameStr}.pdf` 
+                    : `CAVA-Calendar-${periodStr}.pdf`;
+                
+                pdf.save(filename);
             });
         });
     </script>
