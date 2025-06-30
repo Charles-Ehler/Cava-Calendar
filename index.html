@@ -278,6 +278,7 @@
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); // Normalize time to midnight for accurate date comparison
                 
+                // Check each period to see if today falls within its range
                 for (let i = 1; i <= 13; i++) {
                     const period = periods[i];
                     const start = new Date(period.startDate);
@@ -289,13 +290,19 @@
                         return i;
                     }
                 }
-                // Default to P13 if current date is outside all periods
+                
+                // If today is before all periods, return first period
+                if (today < periods[1].startDate) {
+                    return 1;
+                }
+                
+                // If today is after all periods, return last period
                 return 13;
             }
 
             // Initialize the application
             function init() {
-                // Always check current period first (override session storage)
+                // Determine current period based on today's date
                 currentPeriod = getCurrentPeriod();
                 
                 loadFromSessionStorage();
@@ -304,23 +311,23 @@
                 // Hide visit bank by default - it will show when Generate Visits is clicked
                 document.getElementById('visitBank').classList.add('hidden');
                 
-                renderCalendar();
-                updateGenerateButtonState();
-                
-                // Update period tabs styling based on current period
+                // Update period tabs styling (will gray out past periods)
                 updatePeriodTabsStyle();
                 
-                // Set active tab based on current period
-                periodTabs.forEach(tab => {
-                    tab.classList.remove('active');
-                    if (parseInt(tab.dataset.period) === currentPeriod) {
-                        tab.classList.add('active');
-                    }
-                });
+                // Find and activate the correct period tab
+                const activeTab = document.querySelector(`.period-tab[data-period="${currentPeriod}"]`);
+                if (activeTab) {
+                    // Remove active class from all tabs
+                    periodTabs.forEach(tab => tab.classList.remove('active'));
+                    // Add active class to current period tab
+                    activeTab.classList.add('active');
+                }
                 
-                // Update displays
+                // Update displays and render calendar for current period
                 currentPeriodDisplay.textContent = `P${currentPeriod}`;
                 updateDateRangeDisplay();
+                renderCalendar();
+                updateGenerateButtonState();
             }
 
             // Update period tabs styling to gray out past periods
@@ -334,7 +341,7 @@
                     const endDate = new Date(period.endDate);
                     endDate.setHours(23, 59, 59, 999);
                     
-                    // Gray out if period is in the past (end date is before today)
+                    // Gray out if period is completely in the past (end date is before today)
                     if (endDate < today) {
                         tab.classList.add('text-gray-400');
                     } else {
