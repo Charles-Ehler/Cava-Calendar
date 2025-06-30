@@ -59,6 +59,18 @@
             word-break: break-word;
             overflow-wrap: anywhere;
         }
+        
+        /* Negative remaining count styling */
+        .visit-tile .negative-count {
+            display: inline-block;
+            background-color: #b00020;
+            color: white !important;
+            font-weight: bold;
+            border-radius: 0.25rem;
+            padding: 0.1rem 0.25rem;
+            min-width: 1.5rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-[#ffeab6] min-h-screen font-sans">
@@ -83,7 +95,7 @@
         <!-- Instruction Banner -->
         <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
             <p class="text-sm font-medium text-gray-700">
-                Instructions: Select the active period below. Enter your name and the number of restaurants. Then drag visit tiles into the calendar below.
+                Instructions: Select the active period above. Enter your name and the number of restaurants. Then drag visit tiles into the calendar below.
             </p>
         </div>
 
@@ -632,7 +644,7 @@
                     <div class="flex justify-between text-[11px] font-medium">
                         <span>${required}</span>
                         <span>${scheduled}</span>
-                        <span class="${remaining < 0 ? 'text-red-500 font-bold' : ''}">${remaining}</span>
+                        <span>${remaining >= 0 ? remaining : `<span class="negative-count">${remaining}</span>`}</span>
                     </div>
                 `;
                 
