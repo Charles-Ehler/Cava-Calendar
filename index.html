@@ -785,11 +785,22 @@
                 timeDisplay.className = `${
                     isShortDuration ? 'text-[10px]' : 'text-xs'
                 } ${visit.type === 'cash-audit' || visit.type === 'competency' ? 'text-black' : ''}`;
+                
+                // Calculate start time
                 const startHour = visit.hour % 12 || 12;
                 const startAmpm = visit.hour < 12 ? 'AM' : 'PM';
-                const endHour = (visit.hour + visit.duration) % 12 || 12;
-                const endAmpm = (visit.hour + visit.duration) < 12 ? 'AM' : 'PM';
-                timeDisplay.textContent = `${startHour}:00 ${startAmpm} - ${endHour}:00 ${endAmpm}`;
+                
+                // Calculate end time with fractional hours
+                const totalMinutes = visit.duration * 60;
+                const endHour24 = visit.hour + Math.floor(totalMinutes / 60);
+                const endMinutes = Math.floor(totalMinutes % 60);
+                const endHour12 = endHour24 % 12 || 12;
+                const endAmpm = endHour24 < 12 ? 'AM' : 'PM';
+                
+                // Format with leading zero for minutes
+                const formatMinutes = (mins) => mins.toString().padStart(2, '0');
+                timeDisplay.textContent = 
+                    `${startHour}:00 ${startAmpm} - ${endHour12}:${formatMinutes(endMinutes)} ${endAmpm}`;
                 
                 // Delete button
                 const deleteButton = document.createElement('button');
