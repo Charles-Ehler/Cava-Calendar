@@ -48,6 +48,10 @@
             border-bottom: 4px solid #009ef4;
             font-weight: bold;
         }
+        
+        .period-tab.text-gray-400 {
+            color: #9CA3AF;
+        }
 
         /* Ensure text wrapping in calendar visit tiles */
         #calendarContainer .visit-tile {
@@ -93,7 +97,7 @@
                 <button class="period-tab px-4 py-2 bg-white rounded-t-lg hover:bg-gray-100" data-period="10">P10</button>
                 <button class="period-tab px-4 py-2 bg-white rounded-t-lg hover:bg-gray-100" data-period="11">P11</button>
                 <button class="period-tab px-4 py-2 bg-white rounded-t-lg hover:bg-gray-100" data-period="12">P12</button>
-                <button class="period-tab px-4 py-2 bg-white rounded-t-lg hover:bg-gray-100 active" data-period="13">P13</button>
+                <button class="period-tab px-4 py-2 bg-white rounded-t-lg hover:bg-gray-100" data-period="13">P13</button>
             </div>
         </div>
 
@@ -269,8 +273,31 @@
             const dateRangeDisplay = document.getElementById('dateRangeDisplay');
             const printButton = document.getElementById('printButton');
 
+            // Determine current period based on today's date
+            function getCurrentPeriod() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize time to midnight for accurate date comparison
+                
+                for (let i = 1; i <= 13; i++) {
+                    const period = periods[i];
+                    const start = new Date(period.startDate);
+                    const end = new Date(period.endDate);
+                    start.setHours(0, 0, 0, 0);
+                    end.setHours(23, 59, 59, 999);
+                    
+                    if (today >= start && today <= end) {
+                        return i;
+                    }
+                }
+                // Default to P13 if current date is outside all periods
+                return 13;
+            }
+
             // Initialize the application
             function init() {
+                // Always check current period first (override session storage)
+                currentPeriod = getCurrentPeriod();
+                
                 loadFromSessionStorage();
                 setupEventListeners();
                 
@@ -279,6 +306,41 @@
                 
                 renderCalendar();
                 updateGenerateButtonState();
+                
+                // Update period tabs styling based on current period
+                updatePeriodTabsStyle();
+                
+                // Set active tab based on current period
+                periodTabs.forEach(tab => {
+                    tab.classList.remove('active');
+                    if (parseInt(tab.dataset.period) === currentPeriod) {
+                        tab.classList.add('active');
+                    }
+                });
+                
+                // Update displays
+                currentPeriodDisplay.textContent = `P${currentPeriod}`;
+                updateDateRangeDisplay();
+            }
+
+            // Update period tabs styling to gray out past periods
+            function updatePeriodTabsStyle() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                periodTabs.forEach(tab => {
+                    const periodNum = parseInt(tab.dataset.period);
+                    const period = periods[periodNum];
+                    const endDate = new Date(period.endDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    
+                    // Gray out if period is in the past (end date is before today)
+                    if (endDate < today) {
+                        tab.classList.add('text-gray-400');
+                    } else {
+                        tab.classList.remove('text-gray-400');
+                    }
+                });
             }
 
             // Load data from session storage
@@ -399,6 +461,7 @@
                         updateVisitBank();
                         renderCalendar();
                         saveToSessionStorage();
+                        updatePeriodTabsStyle();
                         
                         // Ensure drag events are properly set up for new tiles
                         document.querySelectorAll('.visit-tile[draggable="true"]').forEach(tile => {
