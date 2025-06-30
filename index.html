@@ -83,7 +83,7 @@
         <!-- Instruction Banner -->
         <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
             <p class="text-sm font-medium text-gray-700">
-                Instructions: Select the active period below. Enter your name and the number of restaurants. Then drag visit tiles into the calendar below.
+                Instructions: Select the active period above. Enter your name and the number of restaurants. Then drag visit tiles into the calendar below.
             </p>
         </div>
 
@@ -611,7 +611,7 @@
                 tile.addEventListener('dragstart', handleDragStart);
                 
                 const tileTitle = document.createElement('div');
-                tileTitle.className = 'font-bold text-xs truncate';
+                tileTitle.className = 'font-bold text-base truncate';
                 tileTitle.textContent = type.name;
                 tileTitle.title = type.name;
                 
