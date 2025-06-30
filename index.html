@@ -482,12 +482,12 @@
                     
                     // Create just one tile per type
                     const location = restaurantName ? restaurantName : 'Restaurant';
-                    createVisitTile(type, location, remaining > 0, required, scheduled, remaining);
+                    createVisitTile(type, location, required, scheduled, remaining);
                 });
             }
 
             // Create a visit tile in the visit bank
-            function createVisitTile(type, location, isActive, required, scheduled, remaining) {
+            function createVisitTile(type, location, required, scheduled, remaining) {
                 const isShortDuration = type.duration <= 1.5;
                 
                 const tile = document.createElement('div');
@@ -495,14 +495,9 @@
                 tile.dataset.type = type.id;
                 tile.dataset.duration = type.duration;
                 tile.dataset.location = location;
-                tile.draggable = isActive;
-                
-                if (isActive) {
-                    tile.classList.add('cursor-move');
-                    tile.addEventListener('dragstart', handleDragStart);
-                } else {
-                    tile.classList.add('opacity-50', 'cursor-not-allowed');
-                }
+                tile.draggable = true;
+                tile.classList.add('cursor-move');
+                tile.addEventListener('dragstart', handleDragStart);
                 
                 const tileTitle = document.createElement('div');
                 tileTitle.className = 'font-bold text-sm truncate';
@@ -526,7 +521,7 @@
                     <div class="flex justify-between text-[11px] font-medium">
                         <span>${required}</span>
                         <span>${scheduled}</span>
-                        <span>${remaining}</span>
+                        <span class="${remaining < 0 ? 'text-red-500 font-bold' : ''}">${remaining}</span>
                     </div>
                 `;
                 
@@ -703,23 +698,8 @@
                 const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                 const timeSlot = e.currentTarget;
                 
-                // Check visit type limits
+                // Get visit type info (but don't enforce limits)
                 const visitType = visitTypes.find(t => t.id === data.type);
-                const usedCount = periodData[currentPeriod].scheduledVisits.filter(v => v.type === data.type).length;
-                
-                if (visitType.perRestaurant) {
-                    const maxAllowed = visitType.maxPerRestaurant * restaurantCount;
-                    if (usedCount >= maxAllowed) {
-                        alert(`You've already scheduled all ${maxAllowed} ${visitType.name} visits for this period`);
-                        return;
-                    }
-                } else {
-                    const maxAllowed = visitType.maxPerGarden || 1;
-                    if (usedCount >= maxAllowed) {
-                        alert(`You can only schedule ${maxAllowed} ${visitType.name} per period`);
-                        return;
-                    }
-                }
                 
                 // Check for overlapping visits in current period
                 const startHour = parseInt(timeSlot.dataset.hour);
@@ -796,8 +776,11 @@
                     <div class="flex justify-between text-[11px] font-medium">
                         <span>${visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1}</span>
                         <span>${periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}</span>
-                        <span>${(visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1) - 
-                              periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}</span>
+                        <span class="${((visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1) - 
+                              periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length) < 0 ? 'text-red-500' : ''}">
+                            ${(visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1) - 
+                              periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}
+                        </span>
                     </div>
                 `;
                 
