@@ -48,6 +48,13 @@
             border-bottom: 4px solid #009ef4;
             font-weight: bold;
         }
+
+        /* Ensure text wrapping in calendar visit tiles */
+        #calendarContainer .visit-tile {
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
     </style>
 </head>
 <body class="bg-[#ffeab6] min-h-screen font-sans">
@@ -101,7 +108,7 @@
                     <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">Enter Your Name</label>
                     <input type="text" id="userName" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009ef4]" placeholder="Your Name">
                 </div>
-                <button id="generateVisitsBtn" class="w-full px-4 py-3 bg-[#009ef4] text-white rounded-md hover:bg-[#0083d1] focus:outline-none focus:ring-2 focus:ring-[#009ef4] font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button id="generateVisitsBtn" class="w-full px-4 py-3 bg-[#f9d000] text-white rounded-md hover:bg-white hover:text-[#f9d000] focus:outline-none focus:ring-2 focus:ring-[#f9d000] focus:bg-white focus:text-[#f9d000] font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     Generate Visits
                 </button>
                 <div id="visitBank" class="space-y-2 mt-4 hidden">
@@ -462,31 +469,29 @@
                 
                 const currentVisitTypes = visitTypes.filter(type => {
                     const isInPeriod = type.periods === 'all' || type.periods.includes(currentPeriod);
-                    const hasRemainingUses = periodData[currentPeriod].remainingUses[type.id] > 0;
-                    return isInPeriod && hasRemainingUses;
+                    return isInPeriod;
                 });
                 
                 currentVisitTypes.forEach(type => {
-                    // Calculate used count for this type
-                    const usedCount = periodData[currentPeriod].scheduledVisits.filter(v => v.type === type.id).length;
-                    const remaining = (periodData[currentPeriod].remainingUses[type.id] || 0) - usedCount;
+                    // Calculate counts for this type
+                    const required = type.perRestaurant ? 
+                        (type.maxPerRestaurant * restaurantCount) : 
+                        (type.maxPerGarden || 1);
+                    const scheduled = periodData[currentPeriod].scheduledVisits.filter(v => v.type === type.id).length;
+                    const remaining = required - scheduled;
                     
                     // Create just one tile per type
-                    const location = type.perRestaurant ? 
-                        (restaurantName ? restaurantName : 'Restaurant') : 
-                        'Garden';
-                    createVisitTile(type, location, remaining > 0);
+                    const location = restaurantName ? restaurantName : 'Restaurant';
+                    createVisitTile(type, location, remaining > 0, required, scheduled, remaining);
                 });
             }
 
             // Create a visit tile in the visit bank
-            function createVisitTile(type, location, isActive) {
+            function createVisitTile(type, location, isActive, required, scheduled, remaining) {
                 const isShortDuration = type.duration <= 1.5;
                 
                 const tile = document.createElement('div');
-                tile.className = `visit-tile ${type.color} ${
-                    isShortDuration ? 'px-1 py-0.5' : 'p-2'
-                } rounded-md h-24 flex flex-col justify-between font-medium leading-tight`;
+                tile.className = `visit-tile ${type.color} p-2 rounded-md h-28 flex flex-col justify-between font-medium leading-tight`;
                 tile.dataset.type = type.id;
                 tile.dataset.duration = type.duration;
                 tile.dataset.location = location;
@@ -500,30 +505,30 @@
                 }
                 
                 const tileTitle = document.createElement('div');
-                tileTitle.className = isShortDuration ? 'font-bold text-xs truncate' : 'font-bold text-sm';
+                tileTitle.className = 'font-bold text-sm truncate';
                 tileTitle.textContent = type.name;
                 tileTitle.title = type.name;
                 
                 const tileLocation = document.createElement('div');
-                tileLocation.className = isShortDuration ? 'text-[10px] truncate' : 'text-xs';
+                tileLocation.className = 'text-xs';
                 tileLocation.textContent = location;
                 tileLocation.title = location;
                 
-                // Calculate remaining uses
-                const usedCount = periodData[currentPeriod].scheduledVisits.filter(v => v.type === type.id).length;
-                const remaining = (periodData[currentPeriod].remainingUses[type.id] || 0) - usedCount;
-                
-                // Add remaining uses indicator
-                const usesIndicator = document.createElement('div');
-                usesIndicator.className = `${
-                    isShortDuration ? 'text-[9px]' : 'text-xs'
-                } ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
-                
-                if (type.perRestaurant) {
-                    usesIndicator.textContent = `${remaining} remaining`;
-                } else {
-                    usesIndicator.textContent = remaining > 0 ? 'Available' : 'Already scheduled';
-                }
+                // Add counter display
+                const counter = document.createElement('div');
+                counter.className = `text-xs ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
+                counter.innerHTML = `
+                    <div class="flex justify-between text-[10px]">
+                        <span>Required</span>
+                        <span>Scheduled</span>
+                        <span>Remaining</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] font-medium">
+                        <span>${required}</span>
+                        <span>${scheduled}</span>
+                        <span>${remaining}</span>
+                    </div>
+                `;
                 
                 const durationText = document.createElement('div');
                 durationText.className = `text-xs ${type.id === 'cash-audit' || type.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
@@ -539,7 +544,7 @@
                 tile.appendChild(tileTitle);
                 tile.appendChild(tileLocation);
                 tile.appendChild(durationText);
-                tile.appendChild(usesIndicator);
+                tile.appendChild(counter);
                 
                 // Update location text for restaurant visits
                 const locationText = type.perRestaurant ? 
@@ -744,7 +749,7 @@
                 const visit = {
                     type: data.type,
                     duration: data.duration,
-                    location: data.location,
+                    location: restaurantNameInput.value || 'Restaurant',
                     date: timeSlot.dataset.date,
                     hour: parseInt(timeSlot.dataset.hour),
                     week: parseInt(timeSlot.dataset.week),
@@ -768,47 +773,44 @@
                 const isShortDuration = visit.duration <= 1.5;
                 
                 const tile = document.createElement('div');
-                tile.className = `visit-tile ${visitType.color} ${
-                    isShortDuration ? 'px-1 py-0.5' : 'p-2'
-                } rounded-md absolute top-0 left-0 right-0 bottom-0 overflow-hidden flex flex-col justify-between font-medium leading-tight`;
+                tile.className = `visit-tile ${visitType.color} p-2 rounded-md absolute top-0 left-0 right-0 bottom-0 flex flex-col justify-between font-medium leading-tight`;
+                tile.style.wordBreak = 'break-word';
+                tile.style.overflowWrap = 'anywhere';
                 tile.dataset.visitId = `${visit.date}-${visit.hour}-${visit.week}-${visit.day}`;
                 
                 const tileTitle = document.createElement('div');
-                tileTitle.className = isShortDuration ? 'font-bold text-xs truncate' : 'font-bold text-sm';
+                tileTitle.className = visit.duration <= 1.5 ? 'font-bold text-xs' : 'font-bold text-sm';
+                tileTitle.style.whiteSpace = 'normal';
+                tileTitle.style.wordBreak = 'break-word';
                 tileTitle.textContent = visitType.name;
-                tileTitle.title = visitType.name; // Add tooltip for truncated text
+                
+                // Add counter display for scheduled visits
+                const counter = document.createElement('div');
+                counter.className = `text-xs ${visitType.id === 'cash-audit' || visitType.id === 'competency' ? 'text-black' : 'text-gray-200'}`;
+                counter.innerHTML = `
+                    <div class="flex justify-between text-[10px]">
+                        <span>Req</span>
+                        <span>Sch</span>
+                        <span>Rem</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] font-medium">
+                        <span>${visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1}</span>
+                        <span>${periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}</span>
+                        <span>${(visitType.perRestaurant ? visitType.maxPerRestaurant * restaurantCount : visitType.maxPerGarden || 1) - 
+                              periodData[currentPeriod].scheduledVisits.filter(v => v.type === visit.type).length}</span>
+                    </div>
+                `;
                 
                 const tileLocation = document.createElement('div');
-                tileLocation.className = isShortDuration ? 'text-[10px] truncate' : 'text-xs';
+                tileLocation.className = visit.duration <= 1.5 ? 'text-[10px]' : 'text-xs';
                 tileLocation.textContent = visit.location;
-                tileLocation.title = visit.location; // Add tooltip for truncated text
-                
-                const timeDisplay = document.createElement('div');
-                timeDisplay.className = `${
-                    isShortDuration ? 'text-[10px]' : 'text-xs'
-                } ${visit.type === 'cash-audit' || visit.type === 'competency' ? 'text-black' : ''}`;
-                
-                // Calculate start time
-                const startHour = visit.hour % 12 || 12;
-                const startAmpm = visit.hour < 12 ? 'AM' : 'PM';
-                
-                // Calculate end time with fractional hours
-                const totalMinutes = visit.duration * 60;
-                const endHour24 = visit.hour + Math.floor(totalMinutes / 60);
-                const endMinutes = Math.floor(totalMinutes % 60);
-                const endHour12 = endHour24 % 12 || 12;
-                const endAmpm = endHour24 < 12 ? 'AM' : 'PM';
-                
-                // Format with leading zero for minutes
-                const formatMinutes = (mins) => mins.toString().padStart(2, '0');
-                timeDisplay.textContent = 
-                    `${startHour}:00 ${startAmpm} - ${endHour12}:${formatMinutes(endMinutes)} ${endAmpm}`;
+                tileLocation.title = visit.location;
                 
                 // Delete button
                 const deleteButton = document.createElement('button');
-                deleteButton.className = `absolute ${
-                    isShortDuration ? 'top-0.5 right-0.5' : 'top-1 right-1'
-                } text-white hover:text-gray-200 text-xs`;
+                deleteButton.className = visit.duration <= 1.5 
+                    ? 'absolute top-0.5 right-0.5 text-white hover:text-gray-200 text-[10px]' 
+                    : 'absolute top-1 right-1 text-white hover:text-gray-200 text-xs';
                 deleteButton.innerHTML = '&times;';
                 deleteButton.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -830,7 +832,6 @@
                 
                 tile.appendChild(tileTitle);
                 tile.appendChild(tileLocation);
-                tile.appendChild(timeDisplay);
                 tile.appendChild(deleteButton);
                 
                 // Set height based on duration
@@ -876,8 +877,11 @@
                     const headerHeight = 60;
                     weekClone.style.paddingTop = headerHeight + 'px';
                     
+                    // Optional delay to ensure layout stability
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
                     const canvas = await html2canvas(weekClone, {
-                        scale: window.devicePixelRatio * 2,
+                        scale: 3,
                         logging: false,
                         useCORS: true,
                         allowTaint: true,
@@ -885,25 +889,23 @@
                         scrollY: -headerHeight,
                         windowHeight: weekClone.scrollHeight + headerHeight,
                         ignoreElements: (element) => {
-                            // Skip elements that shouldn't affect layout
                             return element.classList.contains('no-print');
                         },
                         onclone: (clonedDoc) => {
-                            // Preserve all styles and dimensions
+                            // Ensure visit tiles maintain their height
                             clonedDoc.querySelectorAll('.visit-tile').forEach(tile => {
-                                tile.style.width = '100%';
                                 tile.style.boxSizing = 'border-box';
+                                tile.style.height = tile.offsetHeight + 'px';
+                                tile.style.minHeight = tile.offsetHeight + 'px';
                             });
                             
-                            // Make sure headers are visible
+                            // Keep sticky headers visible without disrupting layout
                             const headers = clonedDoc.querySelectorAll('.sticky.top-0');
                             headers.forEach(header => {
-                                header.style.position = 'static';
-                                header.style.zIndex = 'auto';
+                                header.style.position = 'relative';
                             });
                             
-                            // Force layout recalculation
-                            clonedDoc.body.offsetHeight;
+                            clonedDoc.body.offsetHeight; // Force layout
                         }
                     });
                     
