@@ -61,13 +61,18 @@
     <div class="container mx-auto px-4 py-6">
         <!-- Header Section -->
         <header class="mb-8">
-            <div class="flex items-center">
-                <div class="w-16 h-16 bg-[#009ef4] rounded-lg flex items-center justify-center text-white font-bold text-xl mr-4">
-                    CAVA
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center">
+                    <div class="w-16 h-16 bg-[#009ef4] rounded-lg flex items-center justify-center text-white font-bold text-xl mr-4">
+                        CAVA
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-[#009ef4]">CAVA Area Leader VISIT Calendar</h1>
+                        <p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-3xl font-bold text-[#009ef4]">CAVA Area Leader VISIT Calendar</h1>
-                    <p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
+                <div class="ml-4">
+                    <input type="text" id="userName" class="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009ef4]" placeholder="Your Name">
                 </div>
             </div>
         </header>
@@ -103,10 +108,6 @@
                 <div class="mb-4">
                     <label for="restaurantCount" class="block text-sm font-medium text-gray-700 mb-1">Number of Restaurants</label>
                     <input type="number" id="restaurantCount" min="1" max="20" value="1" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009ef4]">
-                </div>
-                <div class="mb-4">
-                    <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">Enter Your Name</label>
-                    <input type="text" id="userName" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009ef4]" placeholder="Your Name">
                 </div>
                 <button id="generateVisitsBtn" class="w-full px-4 py-3 bg-[#f9d000] text-white rounded-md hover:bg-white hover:text-[#f9d000] focus:outline-none focus:ring-2 focus:ring-[#f9d000] focus:bg-white focus:text-[#f9d000] font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     Generate Visits
@@ -230,7 +231,7 @@
                     id: 'station', 
                     name: 'Station Training Workshop', 
                     duration: 2, 
-                    color: 'bg-[#ff9d77] text-white', 
+                    color: 'bg-[#ff4c0a] text-white', 
                     periods: 'all', 
                     perRestaurant: false,
                     maxPerGarden: 1,
@@ -472,15 +473,31 @@
                     return isInPeriod;
                 });
                 
-                currentVisitTypes.forEach(type => {
-                    // Calculate counts for this type
+                // First calculate remaining counts for all types
+                const visitTypesWithCounts = currentVisitTypes.map(type => {
                     const required = type.perRestaurant ? 
                         (type.maxPerRestaurant * restaurantCount) : 
                         (type.maxPerGarden || 1);
                     const scheduled = periodData[currentPeriod].scheduledVisits.filter(v => v.type === type.id).length;
                     const remaining = required - scheduled;
                     
-                    // Create just one tile per type
+                    return {
+                        type,
+                        required,
+                        scheduled,
+                        remaining
+                    };
+                });
+                
+                // Sort by remaining counts (positive first, then zero/negative)
+                visitTypesWithCounts.sort((a, b) => {
+                    if (a.remaining > 0 && b.remaining <= 0) return -1;
+                    if (a.remaining <= 0 && b.remaining > 0) return 1;
+                    return 0; // Keep original order among same remaining status
+                });
+                
+                // Create tiles in sorted order
+                visitTypesWithCounts.forEach(({type, required, scheduled, remaining}) => {
                     const location = restaurantName ? restaurantName : 'Restaurant';
                     createVisitTile(type, location, required, scheduled, remaining);
                 });
