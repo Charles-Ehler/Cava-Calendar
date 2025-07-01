@@ -616,12 +616,7 @@
                     };
                 });
                 
-                // Sort by remaining counts (positive first, then zero/negative)
-                visitTypesWithCounts.sort((a, b) => {
-                    if (a.remaining > 0 && b.remaining <= 0) return -1;
-                    if (a.remaining <= 0 && b.remaining > 0) return 1;
-                    return 0; // Keep original order among same remaining status
-                });
+
                 
                 // Create tiles in sorted order
                 visitTypesWithCounts.forEach(({type, required, scheduled, remaining}) => {
