@@ -1,5 +1,5 @@
 <!-- Created by Charles Ehler for CAVA Area Leader Tool | July 2025 -->
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -702,13 +702,19 @@
                 const isShortDuration = type.duration <= 1.5;
                 
                 const tile = document.createElement('div');
-                tile.className = `visit-tile ${type.color} p-1.5 rounded-md h-21 flex flex-col justify-between font-medium leading-tight`;
-                tile.dataset.type = type.id;
-                tile.dataset.duration = type.duration;
-                tile.dataset.location = location;
-                tile.draggable = true;
-                tile.classList.add('cursor-move');
-                tile.addEventListener('dragstart', handleDragStart);
+				tile.className = `visit-tile ${type.color} p-1.5 rounded-md h-21 flex flex-col justify-between font-medium leading-tight`;
+				tile.dataset.type = type.id;
+				tile.dataset.duration = type.duration;
+				tile.dataset.location = location;
+				tile.draggable = true;
+				tile.classList.add('cursor-move');
+				tile.addEventListener('dragstart', handleDragStart);
+
+// If Required = 0, visually fade the tile
+				if (remaining === 0) {
+				    tile.classList.add('opacity-50');
+				    tile.title = 'Not required for this period or restaurant.';
+				}
                 
                 const tileTitle = document.createElement('div');
                 tileTitle.className = 'font-bold text-base truncate';
