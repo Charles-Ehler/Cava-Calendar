@@ -1,5 +1,4 @@
-<!-- Created by Charles Ehler for CAVA Area Leader Tool | July 2025 -->
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -80,9 +79,9 @@
         <header class="mb-8">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center">
-                    <img src="CavaLogo.png" alt="CAVA logo" class="w-32 h-32 rounded-lg object-contain mr-4">
+                    <img src="https://github.com/Charles-Ehler/Cava-Calendar/blob/main/CavaLogo.png?raw=true" alt="CAVA logo" class="w-32 h-32 rounded-lg object-contain mr-4">
                     <div>
-                        <h1 class="text-3xl font-bold text-[#009ef4]">Ops Leader Visit Calendar</h1>
+                        <h1 class="text-3xl font-bold text-[#009ef4]">Area Leader Visit Calendar</h1>
                         <p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
                     </div>
                 </div>
@@ -93,12 +92,11 @@
             </div>
         </header>
 
-        <!-- Instruction Banner -->
-        <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
-            <p class="text-sm font-medium text-gray-700">
-                <b>Instructions: </b>Select the active period below. Enter your name and the number of restaurants. Then drag visit tiles into the calendar below.
-            </p>
-        </div>
+
+        <!-- View Instructions Button -->
+        <button id="viewInstructionsBtn" class="bg-[#4a9aca] text-[#fff8e8] font-bold text-sm py-2 px-4 rounded-md mb-4 hover:underline">
+            View Instructions
+        </button>
 
         <!-- Period Tabs -->
         <div class="mb-6 overflow-x-auto">
@@ -153,7 +151,7 @@
                             <button id="downloadButton" class="no-print px-4 py-2 bg-[#009ef4] text-white rounded-md hover:bg-[#0083d1] focus:outline-none focus:ring-2 focus:ring-[#009ef4] font-medium">
                                 Download Calendar (PDF)
                             </button>
-                            <button id="resetButton" class="no-print px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium">
+                            <button id="resetButton" class="no-print px-4 py-2 bg-[#cc0066] text-white font-bold rounded-lg hover:bg-[#aa0055] focus:outline-none focus:ring-2 focus:ring-[#cc0066]/50 transition-colors">
                                 Reset Calendar
                             </button>
                         </div>
@@ -169,8 +167,47 @@
         </div>
     </div>
 
+    <!-- Instructions Panel -->
+    <div id="instructionsPanel" class="fixed inset-x-0 bottom-0 z-[100] translate-y-full transition-transform duration-300 bg-[#4a9aca] text-[#fff8e8] rounded-t-xl p-6">
+        <button id="closeInstructionsBtn" class="absolute top-4 right-4 text-2xl font-bold text-[#fff8e8]">×</button>
+        <div class="max-w-4xl mx-auto">
+            <h3 class="text-xl font-bold mb-4">Instructions:</h3>
+            <ol class="list-decimal pl-5 space-y-2">
+                <li>Enter your name at the top right-hand corner—this will appear on the downloaded calendar.</li>
+                <li>Confirm the period for scheduling.</li>
+                <li>Enter one restaurant's name in the restaurant name field.</li>
+                <li>Input the total number of restaurants in your Garden.
+                    <ul class="list-disc pl-5 mt-1">
+                        <li>Note: This number is only used to calculate how many visits remain (displayed at the bottom of the tiles).</li>
+                    </ul>
+                </li>
+                <li>Click "Generate Visits." This will create all required visits for that restaurant, labeled by type.</li>
+                <li>Place the visits on the calendar.</li>
+                <li>Then return to the restaurant name field, enter the next location, and click "Generate Visits" again to create a new set of tiles for that restaurant.</li>
+                <li>Repeat until you have scheduled all required visits for your Garden.</li>
+                <li>Select Download Calendar to send to your RD.
+                    <ul class="list-disc pl-5 mt-1">
+                        <li>Note: If you need to clear the entire calendar, select Reset Calendar.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Instructions panel toggle
+            const viewInstructionsBtn = document.getElementById('viewInstructionsBtn');
+            const closeInstructionsBtn = document.getElementById('closeInstructionsBtn');
+            const instructionsPanel = document.getElementById('instructionsPanel');
+
+            viewInstructionsBtn.addEventListener('click', () => {
+                instructionsPanel.classList.toggle('translate-y-full');
+            });
+
+            closeInstructionsBtn.addEventListener('click', () => {
+                instructionsPanel.classList.add('translate-y-full');
+            });
             // Period data
             const periods = {
                 1: { startDate: new Date('2024-12-30'), endDate: new Date('2025-01-26') },
@@ -617,7 +654,12 @@
                     };
                 });
                 
-
+                // Sort by remaining counts (positive first, then zero/negative)
+                visitTypesWithCounts.sort((a, b) => {
+                    if (a.remaining > 0 && b.remaining <= 0) return -1;
+                    if (a.remaining <= 0 && b.remaining > 0) return 1;
+                    return 0; // Keep original order among same remaining status
+                });
                 
                 // Create tiles in sorted order
                 visitTypesWithCounts.forEach(({type, required, scheduled, remaining}) => {
