@@ -859,8 +859,7 @@
                     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                     for (let day = 0; day < 7; day++) {
                         const dayColumn = document.createElement('div');
-                        dayColumn.className = 'col-span-1';
-                        
+                        dayColumn.className = `col-span-1 border-l border-gray-200 ${day === 6 ? 'border-r border-gray-200' : ''}`;                        
                         // Day header
                         const dayHeader = document.createElement('div');
                         dayHeader.className = 'h-12 border-b border-gray-200 flex items-center justify-center day-header font-medium bg-gray-50';
