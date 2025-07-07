@@ -1,5 +1,5 @@
 <!-- Created by Charles Ehler for CAVA Area Leader Tool | July 2025 -->
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -133,34 +133,53 @@
     <!-- Main App Container -->
     <div id="appContainer">
         <!-- Header -->
-        <header class="py-4 px-4 bg-white shadow-md">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <img src="https://github.com/Charles-Ehler/Cava-Calendar/blob/main/CavaLogo.png?raw=true" alt="CAVA Logo" class="w-24 h-24 object-contain">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold text-[#009ef4]">Ops Leader Visit Calendar</h1>
-                        <p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
+        <header class="sticky top-0 z-30 bg-white shadow-md">
+            <!-- Top Row -->
+            <div class="py-4 px-4">
+                <div class="max-w-7xl mx-auto flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <img src="https://github.com/Charles-Ehler/Cava-Calendar/blob/main/CavaLogo.png?raw=true" alt="CAVA Logo" class="w-24 h-24 object-contain">
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold text-[#009ef4]">Ops Leader Visit Calendar</h1>
+                            <p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-end space-x-3 flex-wrap justify-end">
+                        <span id="areaLeaderNameDisplay" class="font-semibold text-[#da3d9d] hidden text-right"></span>
+                        
+                        <button id="editSetupButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit Setup
+                        </button>
+                        
+                        <button id="instructionsButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
+                            <i class="fas fa-question-circle mr-1"></i> Instructions
+                        </button>
+                        
+                        <button id="downloadPdfButton" class="bg-[#009ef4] text-white font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#0083d1] focus:outline-none focus:ring-1 focus:ring-[#009ef4] text-sm">
+                            <i class="fas fa-download mr-1"></i> PDF
+                        </button>
                     </div>
                 </div>
-                
-                <div class="flex items-end space-x-3 flex-wrap justify-end">
-                    <span id="areaLeaderNameDisplay" class="font-semibold text-[#da3d9d] hidden text-right"></span>
-                    
-                    <select id="periodSelector" class="bg-white border border-[#009ef4] rounded-md px-3 py-1 focus:outline-none focus:ring-1 focus:ring-[#009ef4] text-sm">
-                        <!-- Period options will be added dynamically -->
-                    </select>
-                    
-                    <button id="editSetupButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
-                        <i class="fas fa-edit mr-1"></i> Edit Setup
-                    </button>
-                    
-                    <button id="instructionsButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
-                        <i class="fas fa-question-circle mr-1"></i> Instructions
-                    </button>
-                    
-                    <button id="downloadPdfButton" class="bg-[#009ef4] text-white font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#0083d1] focus:outline-none focus:ring-1 focus:ring-[#009ef4] text-sm">
-                        <i class="fas fa-download mr-1"></i> PDF
-                    </button>
+            </div>
+            
+            <!-- Period Tabs Row -->
+            <div class="pb-2 px-4 border-t border-gray-200">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex justify-between items-center mt-2 mb-1 w-full">
+                        <div id="periodTabs" class="flex flex-wrap gap-2">
+                            <!-- Period tabs will be added dynamically -->
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div id="periodDateRange" class="text-right text-sm md:text-base text-gray-700 font-semibold hidden">
+                                <i class="fas fa-calendar-alt text-[#009ef4] mr-2"></i>
+                                <span id="periodRangeText"></span>
+                            </div>
+                            <button id="calendarInfoBtn" class="text-[#009ef4] hover:text-blue-600 focus:outline-none">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -209,6 +228,24 @@
     </div>
 
     <!-- Instructions Modal -->
+    <!-- Calendar Info Modal -->
+    <div id="calendarInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-[#fff8e8] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-[#da3d9d]">Calendar View Info</h2>
+                <button id="closeCalendarInfoBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-sm text-gray-800">
+                <p>
+                    To simplify scheduling and keep the calendar easy to read, each period displays the closest
+                    <strong>Monday–Sunday</strong> week view.
+                    This means the calendar may not perfectly align with CAVA's official fiscal period start and end dates.
+                </p>
+            </div>
+        </div>
+    </div>
     <div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-[#fff8e8] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -288,6 +325,14 @@
         };
 
         // Utility functions
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function getPeriodNumber(period) {
+            return period.replace('P', '');
+        }
+
         function format12Hour(hour) {
             if (hour === 0) return '12 AM';
             if (hour < 12) return `${hour} AM`;
@@ -662,30 +707,52 @@
                 nameDisplay.classList.add('hidden');
             }
             
-            // Populate period selector
-            const periodSelector = document.getElementById('periodSelector');
-            periodSelector.innerHTML = '';
+            // Populate period tabs
+            const periodTabs = document.getElementById('periodTabs');
+            periodTabs.innerHTML = '';
+
+            // Update period date range display
+            const periodDateRange = document.getElementById('periodDateRange');
+            const periodRangeText = document.getElementById('periodRangeText');
+            
+            if (state.ui.currentPeriod) {
+                const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
+                if (currentPeriodData) {
+                    periodRangeText.textContent = `Period ${getPeriodNumber(state.ui.currentPeriod)}: ${formatDate(currentPeriodData.startDate)} – ${formatDate(currentPeriodData.endDate)}`;
+                    periodDateRange.classList.remove('hidden');
+                } else {
+                    periodDateRange.classList.add('hidden');
+                }
+            } else {
+                periodDateRange.classList.add('hidden');
+            }
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             state.fiscalCalendar.forEach(period => {
-                const option = document.createElement('option');
-                option.value = period.period;
-                option.textContent = period.period;
+                const tab = document.createElement('button');
+                tab.textContent = period.period;
+                tab.className = `px-3 py-1 border border-[#009ef4] rounded-md text-[#009ef4] hover:bg-[#e6f7ff] text-sm`;
+                
+                if (period.period === state.ui.currentPeriod) {
+                    tab.className = `px-3 py-1 bg-[#009ef4] text-white font-semibold rounded-md text-sm`;
+                }
                 
                 // Disable past periods
                 if (period.endDate < today) {
-                    option.disabled = true;
+                    tab.className += ' opacity-50 cursor-not-allowed';
+                } else {
+                    tab.addEventListener('click', () => {
+                        state.ui.currentPeriod = period.period;
+                        generateVisitsForPeriod(period.period, state.userProfile.restaurants);
+                        saveState();
+                        renderApp();
+                    });
                 }
                 
-                periodSelector.appendChild(option);
+                periodTabs.appendChild(tab);
             });
-            
-            // Set selected period
-            if (state.ui.currentPeriod) {
-                periodSelector.value = state.ui.currentPeriod;
-            }
         }
 
         function renderVisitBank() {
@@ -736,7 +803,7 @@
                 if (allPerGardenScheduled) {
                     const message = document.createElement('p');
                     message.className = 'text-sm text-green-600 italic mt-2 pl-2';
-                    message.textContent = '✅ All static visits scheduled.';
+                    message.textContent = '✅ All visits scheduled for Per Garden.';
                     visitBankContainer.appendChild(message);
                 }
             }
@@ -1449,8 +1516,7 @@
             // Visit deletion
             calendarContainer.addEventListener('click', handleDeleteVisit);
             
-            // Period change
-            document.getElementById('periodSelector').addEventListener('change', handlePeriodChange);
+            // Period change is now handled directly in renderHeader via tab clicks
             
             // Edit setup
             document.getElementById('editSetupButton').addEventListener('click', function() {
@@ -1471,6 +1537,15 @@
             
             document.getElementById('closeInstructionsBtn').addEventListener('click', function() {
                 document.getElementById('instructionsModal').classList.add('hidden');
+            });
+
+            // Calendar Info Modal controls
+            document.getElementById('calendarInfoBtn').addEventListener('click', function() {
+                document.getElementById('calendarInfoModal').classList.remove('hidden');
+            });
+            
+            document.getElementById('closeCalendarInfoBtn').addEventListener('click', function() {
+                document.getElementById('calendarInfoModal').classList.add('hidden');
             });
         }
 
