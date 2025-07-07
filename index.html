@@ -231,7 +231,7 @@
                 <div>
                     <h3 class="text-lg font-semibold text-[#009ef4]">Visit Types</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div class="bg-[#009ef4] text-white p-2 rounded">QRA (5h)</div>
+                        <div class="bg-[#009ef4] text-white p-2 rounded">Quality Restaurant Audit (QRA) (5h)</div>
                         <div class="bg-[#e8b2ee] p-2 rounded">Coaching (2h)</div>
                         <div class="bg-[#f9d000] p-2 rounded">Guest Exp (1.5h)</div>
                         <div class="bg-[#80ceff] p-2 rounded">Cash Audit (1h)</div>
@@ -295,8 +295,22 @@
         }
 
         function formatTimeRange(startHour, duration) {
+            const formatHour = (hourFraction) => {
+                const hour = Math.floor(hourFraction);
+                const minute = Math.round((hourFraction % 1) * 60);
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = (hour % 12) || 12; // Convert 0 to 12
+
+                if (minute === 0) {
+                    return `${displayHour} ${period}`; // Whole hour format
+                } else {
+                    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`; // Fractional hour format
+                }
+            };
+
             const endHour = startHour + duration;
-            return `${format12Hour(startHour)} - ${format12Hour(endHour)}`;
+            
+            return `${formatHour(startHour)} – ${formatHour(endHour)}`;
         }
 
         function calculateWeekDateRange(weekIndex, periodStartDate) {
@@ -707,27 +721,70 @@
                 heading.textContent = 'Static Visits';
                 visitBankContainer.appendChild(heading);
                 
+                // Check if all per-garden visits are scheduled
+                const allPerGardenScheduled = perGardenVisits.every(v => v.remaining === 0);
+                
                 perGardenVisits.forEach(visit => {
                     if (visit.remaining > 0) {
                         const tile = createVisitTile(visit);
                         visitBankContainer.appendChild(tile);
                     }
                 });
+
+                // Add completion message if all per-garden visits are scheduled
+                if (allPerGardenScheduled) {
+                    const message = document.createElement('p');
+                    message.className = 'text-sm text-green-600 italic mt-2 pl-2';
+                    message.textContent = '✅ All static visits scheduled.';
+                    visitBankContainer.appendChild(message);
+                }
             }
             
             // Render per-restaurant visits
             if (perRestaurantVisits.length > 0) {
+                const sectionDiv = document.createElement('div');
+                
                 const heading = document.createElement('h4');
                 heading.className = 'font-semibold text-gray-700 mt-4 mb-2';
                 heading.textContent = 'Per Restaurant Visits';
-                visitBankContainer.appendChild(heading);
-                
+                sectionDiv.appendChild(heading);
+
+                // Group visits by restaurant name
+                const restaurantsMap = new Map();
                 perRestaurantVisits.forEach(visit => {
-                    if (visit.remaining > 0) {
-                        const tile = createVisitTile(visit);
-                        visitBankContainer.appendChild(tile);
+                    if (!restaurantsMap.has(visit.location)) {
+                        restaurantsMap.set(visit.location, []);
+                    }
+                    restaurantsMap.get(visit.location).push(visit);
+                });
+
+                // Iterate through grouped restaurants and render
+                restaurantsMap.forEach((visitsForRestaurant, restaurantName) => {
+                    const restaurantSubHeading = document.createElement('h5');
+                    restaurantSubHeading.className = 'font-semibold text-[#009ef4] mt-3 mb-1 text-sm pl-2';
+                    restaurantSubHeading.textContent = restaurantName;
+                    sectionDiv.appendChild(restaurantSubHeading);
+
+                    // Check if all visits for this restaurant are scheduled
+                    const allScheduled = visitsForRestaurant.every(v => v.remaining === 0);
+                    
+                    visitsForRestaurant.forEach(visit => {
+                        if (visit.remaining > 0) {
+                            const tile = createVisitTile(visit);
+                            sectionDiv.appendChild(tile);
+                        }
+                    });
+
+                    // Add completion message if all visits are scheduled
+                    if (allScheduled) {
+                        const message = document.createElement('p');
+                        message.className = 'text-sm text-green-600 italic mt-2 pl-2';
+                        message.textContent = '✅ All visits scheduled for this restaurant.';
+                        sectionDiv.appendChild(message);
                     }
                 });
+
+                visitBankContainer.appendChild(sectionDiv);
             }
             
             // Show message if no visits to schedule
@@ -748,7 +805,13 @@
             tile.dataset.visitId = visit.id;
             
             tile.innerHTML = `
-                <span class="font-bold text-sm uppercase">${visit.type}</span>
+                <span class="font-bold text-sm uppercase">${
+                  visit.type === 'QRA' ? 'Quality Restaurant Audit (QRA)' : 
+                  visit.type === 'Guest Experience' ? 'Guest Experience Night/Weekend Visit' :
+                  visit.type === 'GM Impact' ? 'GM Impact Plan Conversation' :
+                  visit.type === 'Competency Champion' ? 'Competency Champion Training' :
+                  visit.type
+                }</span>
                 <span class="text-xs font-medium block">${visit.duration}h</span>
                 <div class="text-xs mt-1">${visit.location === 'Per Garden' ? '1 per period' : visit.location}</div>
                 <div class="text-xs mt-2">Remaining: ${visit.remaining}/${visit.required}</div>
@@ -1328,7 +1391,14 @@
                     
                     // Determine color for bullet based on visit type (optional, but slick)
                     let bulletColor = CAVA_GRAY_TEXT;
-                    if (visit.type === 'QRA') bulletColor = CAVA_BLUE;
+                    if (visit.type === 'QRA') {
+                        bulletColor = CAVA_BLUE;
+                        // Temporarily modify display names for PDF
+                        if (visit.type === 'QRA') visit.type = 'Quality Restaurant Audit (QRA)';
+                        else if (visit.type === 'Guest Experience') visit.type = 'Guest Experience Night/Weekend Visit';
+                        else if (visit.type === 'GM Impact') visit.type = 'GM Impact Plan Conversation';
+                        else if (visit.type === 'Competency Champion') visit.type = 'Competency Champion Training';
+                    }
                     else if (visit.type === 'GM Impact') bulletColor = CAVA_FUCHSIA;
                     else if (visit.type === 'Guest Experience') bulletColor = CAVA_YELLOW;
                     
