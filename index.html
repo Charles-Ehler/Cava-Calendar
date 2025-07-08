@@ -170,14 +170,9 @@
                         <div id="periodTabs" class="flex flex-wrap gap-2">
                             <!-- Period tabs will be added dynamically -->
                         </div>
-                        <div class="flex items-center gap-4">
-                            <div id="periodDateRange" class="text-right text-sm md:text-base text-gray-700 font-semibold hidden">
-                                <i class="fas fa-calendar-alt text-[#009ef4] mr-2"></i>
-                                <span id="periodRangeText"></span>
-                            </div>
-                            <button id="calendarInfoBtn" class="text-[#009ef4] hover:text-blue-600 focus:outline-none">
-                                <i class="fas fa-question-circle text-lg"></i>
-                            </button>
+                        <div id="periodDateRange" class="text-right text-sm md:text-base text-gray-700 font-semibold hidden">
+                            <i class="fas fa-calendar-alt text-[#009ef4] mr-2"></i>
+                            <span id="periodRangeText"></span>
                         </div>
                     </div>
                 </div>
@@ -228,24 +223,6 @@
     </div>
 
     <!-- Instructions Modal -->
-    <!-- Calendar Info Modal -->
-    <div id="calendarInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-[#fff8e8] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-[#da3d9d]">Calendar View Info</h2>
-                <button id="closeCalendarInfoBtn" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="space-y-4 text-sm text-gray-800">
-                <p>
-                    To simplify scheduling and keep the calendar easy to read, each period displays the closest
-                    <strong>Monday–Sunday</strong> week view.
-                    This means the calendar may not perfectly align with CAVA's official fiscal period start and end dates.
-                </p>
-            </div>
-        </div>
-    </div>
     <div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-[#fff8e8] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -325,6 +302,16 @@
         };
 
         // Utility functions
+        function addDays(date, days) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() + days);
+            return newDate;
+        }
+
+        function getDateString(date) {
+            return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+        }
+
         function formatDate(date) {
             return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         }
@@ -359,18 +346,6 @@
             return `${formatHour(startHour)} – ${formatHour(endHour)}`;
         }
 
-        function calculateWeekDateRange(weekIndex, periodStartDate) {
-            const startDate = new Date(periodStartDate);
-            startDate.setDate(startDate.getDate() + (weekIndex * 7));
-            
-            const endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + 6);
-            
-            return {
-                start: startDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
-                end: endDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })
-            };
-        }
 
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -932,10 +907,16 @@
             // Find the current period data
             const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
             if (!currentPeriodData) return;
+
+            const alignedStart = new Date(currentPeriodData.startDate); // Already a Monday
             
             // Render 4 weeks
             for (let weekIndex = 0; weekIndex < 4; weekIndex++) {
-                const weekRange = calculateWeekDateRange(weekIndex, currentPeriodData.startDate);
+                const weekStart = new Date(alignedStart);
+                weekStart.setDate(alignedStart.getDate() + weekIndex * 7);
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
                 
                 const weekContainer = document.createElement('div');
                 weekContainer.id = `week-${weekIndex}`;
@@ -943,7 +924,7 @@
                 
                 const weekHeader = document.createElement('h3');
                 weekHeader.className = 'text-lg font-bold text-[#009ef4] mb-2';
-                weekHeader.textContent = `Week ${weekIndex + 1} – ${weekRange.start} to ${weekRange.end}`;
+                weekHeader.textContent = `Week ${weekIndex + 1}: ${weekStart.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })} – ${weekEnd.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}`;
                 
                 if (state.userProfile.name) {
                     const nameSpan = document.createElement('span');
@@ -965,31 +946,31 @@
                         <th class="w-16 h-12 border border-blue-200 sticky-time">Time</th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Mon</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 1, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 0))}</div>
                         </th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Tue</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 2, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 1))}</div>
                         </th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Wed</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 3, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 2))}</div>
                         </th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Thu</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 4, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 3))}</div>
                         </th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Fri</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 5, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 4))}</div>
                         </th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Sat</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 6, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 5))}</div>
                         </th>
                         <th class="border border-gray-200 p-2 text-center sticky-day-header">
                             <div class="font-bold">Sun</div>
-                            <div class="text-xs text-gray-600">${getDateForWeekDay(weekIndex, 0, currentPeriodData.startDate)}</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 6))}</div>
                         </th>
                     </tr>
                 `;
@@ -1072,16 +1053,18 @@
         }
 
         function getDateForWeekDay(weekIndex, dayOfWeek, periodStartDate) {
-            // dayOfWeek: 0=Sunday, 1=Monday, ..., 6=Saturday
+            // dayOfWeek: 1=Monday, 2=Tuesday, ..., 7=Sunday
             const date = new Date(periodStartDate);
-            date.setDate(date.getDate() + (weekIndex * 7) + dayOfWeek);
             
-            // Adjust for Sunday (dayOfWeek 0)
-            if (dayOfWeek === 0) {
-                date.setDate(date.getDate() + 6);
-            } else {
-                date.setDate(date.getDate() - 1);
-            }
+            // Adjust to Monday of the current week
+            const currentDayOfWeek = date.getDay(); // 0=Sun, 1=Mon, etc.
+            const diffToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // Days to subtract to get Monday
+            
+            // Set to Monday of the first week
+            date.setDate(date.getDate() - diffToMonday + (weekIndex * 7));
+            
+            // Add days for the specific weekday (0=Monday, 6=Sunday)
+            date.setDate(date.getDate() + (dayOfWeek - 1));
             
             return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
         }
@@ -1264,9 +1247,13 @@
             const visit = state.visits.find(v => v.id === visitId);
             if (!visit) return;
             
-            visit.scheduled--;
-            visit.remaining++;
+            // Safely decrement scheduled count with bounds checking
+            if (visit.scheduled > 0) {
+                visit.scheduled--;
+                visit.remaining = Math.min(visit.required, visit.remaining + 1); // Ensure remaining doesn't exceed required
+            }
             
+            // Remove all time slots for this visit
             for (let h = startHour; h < startHour + visit.duration; h++) {
                 const currentSlotKey = `${week}-${day}-${h}`;
                 if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][currentSlotKey]) {
@@ -1274,6 +1261,7 @@
                 }
             }
             
+            // Clean up empty period if needed
             if (state.scheduledSlots[state.ui.currentPeriod] && Object.keys(state.scheduledSlots[state.ui.currentPeriod]).length === 0) {
                 delete state.scheduledSlots[state.ui.currentPeriod];
             }
@@ -1537,15 +1525,6 @@
             
             document.getElementById('closeInstructionsBtn').addEventListener('click', function() {
                 document.getElementById('instructionsModal').classList.add('hidden');
-            });
-
-            // Calendar Info Modal controls
-            document.getElementById('calendarInfoBtn').addEventListener('click', function() {
-                document.getElementById('calendarInfoModal').classList.remove('hidden');
-            });
-            
-            document.getElementById('closeCalendarInfoBtn').addEventListener('click', function() {
-                document.getElementById('calendarInfoModal').classList.add('hidden');
             });
         }
 
