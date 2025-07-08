@@ -288,13 +288,13 @@
                 { period: 'P4', startDate: new Date('2025-03-24'), endDate: new Date('2025-04-20') },
                 { period: 'P5', startDate: new Date('2025-04-21'), endDate: new Date('2025-05-18') },
                 { period: 'P6', startDate: new Date('2025-05-19'), endDate: new Date('2025-06-15') },
-                { period: 'P7', startDate: new Date('2025-06-16'), endDate: new Date('2025-07-13') },
-                { period: 'P8', startDate: new Date('2025-07-14'), endDate: new Date('2025-08-10') },
-                { period: 'P9', startDate: new Date('2025-08-11'), endDate: new Date('2025-09-07') },
-                { period: 'P10', startDate: new Date('2025-09-08'), endDate: new Date('2025-10-05') },
-                { period: 'P11', startDate: new Date('2025-10-06'), endDate: new Date('2025-11-02') },
-                { period: 'P12', startDate: new Date('2025-11-03'), endDate: new Date('2025-11-30') },
-                { period: 'P13', startDate: new Date('2025-12-01'), endDate: new Date('2025-12-28') }
+                { period: 'P7', startDate: new Date('2025-06-17'), endDate: new Date('2025-07-14') },
+                { period: 'P8', startDate: new Date('2025-07-15'), endDate: new Date('2025-08-11') },
+                { period: 'P9', startDate: new Date('2025-08-12'), endDate: new Date('2025-09-08') },
+                { period: 'P10', startDate: new Date('2025-09-09'), endDate: new Date('2025-10-06') },
+                { period: 'P11', startDate: new Date('2025-10-07'), endDate: new Date('2025-11-03') },
+                { period: 'P12', startDate: new Date('2025-11-04'), endDate: new Date('2025-12-01') },
+                { period: 'P13', startDate: new Date('2025-12-02'), endDate: new Date('2025-12-29') }
             ],
             qraPeriods: ['P1', 'P5', 'P8', 'P11'],
             visits: [],
@@ -714,17 +714,24 @@
                     tab.className = `px-3 py-1 bg-[#009ef4] text-white font-semibold rounded-md text-sm`;
                 }
                 
-                // Disable past periods
+                // Style past periods differently and make them non-clickable
                 if (period.endDate < today) {
-                    tab.className += ' opacity-50 cursor-not-allowed';
-                } else {
-                    tab.addEventListener('click', () => {
-                        state.ui.currentPeriod = period.period;
-                        generateVisitsForPeriod(period.period, state.userProfile.restaurants);
-                        saveState();
-                        renderApp();
-                    });
+                    tab.className += ' opacity-50 relative cursor-not-allowed pointer-events-none';
+                    
+                    // Add "Period Passed" overlay
+                    const overlay = document.createElement('span');
+                    overlay.className = 'absolute -bottom-1 left-0 right-0 text-[8px] text-center text-gray-700';
+                    overlay.textContent = 'Period Passed';
+                    tab.appendChild(overlay);
                 }
+                
+                // Make all periods clickable
+                tab.addEventListener('click', () => {
+                    state.ui.currentPeriod = period.period;
+                    generateVisitsForPeriod(period.period, state.userProfile.restaurants);
+                    saveState();
+                    renderApp();
+                });
                 
                 periodTabs.appendChild(tab);
             });
@@ -1383,17 +1390,11 @@
                             
                             // Calculate the actual date for this slot (consistent with calendar)
                             const periodStartDate = currentPeriodData.startDate;
-                            const slotDate = new Date(periodStartDate);
-                            // Adjusting logic for dayOfWeek: 0-Sunday, 1-Monday... but calendar is M-S then Sun
-                            // In your renderCalendar, day loops from 1 to 7. 1=Mon, ..., 6=Sat, 7=Sun.
-                            // getDateForWeekDay calculates based on this.
-                            // Let's reuse getDateForWeekDay's conceptual date for consistency.
-                            const fullDateStr = getDateForWeekDay(weekIndex, dayOfWeek === 7 ? 0 : dayOfWeek, periodStartDate); // Get date formatted as MM/DD
-                            const [month, dayNum] = fullDateStr.split('/');
-                            let year = periodStartDate.getFullYear(); // Assuming all dates are in the same year as periodStartDate
-                            
-                            // Make a proper Date object from the generated string to ensure correct sorting
-                            const finalDateForSort = new Date(year, parseInt(month) - 1, parseInt(dayNum), hour, 0, 0);
+                            // Create correct date by properly cloning base date instead of mutating
+                            const baseDate = new Date(currentPeriodData.startDate.getTime());
+                            baseDate.setDate(baseDate.getDate() + (weekIndex * 7) + (dayOfWeek - 1));
+                            const finalDateForSort = new Date(baseDate);
+                            finalDateForSort.setHours(hour, 0, 0, 0);
                             
                             scheduledVisitsInPeriod.push({
                                 date: finalDateForSort, // Actual Date object for perfect sorting
