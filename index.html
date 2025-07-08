@@ -876,20 +876,38 @@
             visitDiv.style.position = 'absolute';
             visitDiv.style.height = `${(visit.duration * 60) - 4}px`;
             
-            visitDiv.innerHTML = `
-                <div class="flex-shrink-0">
-                    <div class="flex justify-between items-start">
-                        <span class="font-bold uppercase block">${visit.type}</span>
-                        <button class="delete-visit absolute top-1 right-1 text-xs bg-white bg-opacity-30 rounded-full w-4 h-4 flex items-center justify-center hover:bg-opacity-70" data-visit-id="${visit.id}" data-slot-key="${week}-${day}-${hour}" data-start-hour="${hour}">
-                            <i class="fas fa-times text-[8px]"></i>
-                        </button>
+            if (visit.location === 'Per Garden') {
+                // Simplified display for static visits
+                visitDiv.innerHTML = `
+                    <div class="flex-shrink-0">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold uppercase block">${visit.type}</span>
+                            <button class="delete-visit absolute top-1 right-1 text-xs bg-white bg-opacity-30 rounded-full w-4 h-4 flex items-center justify-center hover:bg-opacity-70" data-visit-id="${visit.id}" data-slot-key="${week}-${day}-${hour}" data-start-hour="${hour}">
+                                <i class="fas fa-times text-[8px]"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="mt-1 leading-tight">${visit.location}</div>
-                </div>
-                <div class="flex-shrink-0 text-xs text-right mt-auto">
-                    ${formatTimeRange(hour, visit.duration)}
-                </div>
-            `;
+                    <div class="flex-shrink-0 text-xs text-right mt-auto">
+                        ${formatTimeRange(hour, visit.duration)}
+                    </div>
+                `;
+            } else {
+                // Regular display for restaurant visits
+                visitDiv.innerHTML = `
+                    <div class="flex-shrink-0">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold uppercase block">${visit.type}</span>
+                            <button class="delete-visit absolute top-1 right-1 text-xs bg-white bg-opacity-30 rounded-full w-4 h-4 flex items-center justify-center hover:bg-opacity-70" data-visit-id="${visit.id}" data-slot-key="${week}-${day}-${hour}" data-start-hour="${hour}">
+                                <i class="fas fa-times text-[8px]"></i>
+                            </button>
+                        </div>
+                        <div class="mt-1 leading-tight">${visit.location}</div>
+                    </div>
+                    <div class="flex-shrink-0 text-xs text-right mt-auto">
+                        ${formatTimeRange(hour, visit.duration)}
+                    </div>
+                `;
+            }
 
             if (visit.color.includes('text-white')) {
                 visitDiv.classList.add('text-white');
