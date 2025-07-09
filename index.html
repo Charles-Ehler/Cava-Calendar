@@ -2,887 +2,880 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CAVA Ops Leader Visit Calendar</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-body {
-background-color: #ffeab6;
-}
-.hour-cell {
-height: 60px;
-}
-.drop-zone-hover {
-background-color: rgba(0, 158, 244, 0.1) !important;
-border: 2px dashed #009ef4 !important;
-}
-.shake {
-animation: shake 0.5s;
-}
-@keyframes shake {
-0% { transform: translateX(0); }
-25% { transform: translateX(-5px); }
-50% { transform: translateX(5px); }
-75% { transform: translateX(-5px); }
-100% { transform: translateX(0); }
-}
-.sticky-time {
-position: sticky;
-left: 0;
-z-index: 10;
-background-color: #e6f7ff;
-}
-.sticky-day-header {
-position: sticky;
-top: 0;
-z-index: 10;
-background-color: #fff8e8;
-}
-.sticky-visit-bank {
-position: sticky;
-top: 80px;
-align-self: start;
-}
-@media (max-width: 1023px) {
-.sticky-visit-bank {
-position: static;
-}
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAVA Ops Leader Visit Calendar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #ffeab6;
+        }
+        .hour-cell {
+            height: 60px;
+        }
+        .drop-zone-hover {
+            background-color: rgba(0, 158, 244, 0.1) !important;
+            border: 2px dashed #009ef4 !important;
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .sticky-time {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background-color: #e6f7ff;
+        }
+        .sticky-day-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #fff8e8;
+        }
+        .sticky-visit-bank {
+            position: sticky;
+            top: 80px;
+            align-self: start;
+        }
+        @media (max-width: 1023px) {
+            .sticky-visit-bank {
+                position: static;
+            }
+        }
 
-.scheduled-visit-display-tile {
-font-size: 10px;
-line-height: 1.2;
-text-align: left;
-}
-.scheduled-visit-display-tile .font-bold.uppercase {
-font-size: 11px;
-line-height: 1.1;
-}
-.scheduled-visit-display-tile .flex-shrink-0 > div,
-.scheduled-visit-display-tile .flex-shrink-0 > span {
-word-break: break-word;
-white-space: normal;
-overflow: hidden;
-}
+        .scheduled-visit-display-tile {
+            font-size: 10px;
+            line-height: 1.2;
+            text-align: left;
+        }
+        .scheduled-visit-display-tile .font-bold.uppercase {
+            font-size: 11px;
+            line-height: 1.1;
+        }
+        .scheduled-visit-display-tile .flex-shrink-0 > div,
+        .scheduled-visit-display-tile .flex-shrink-0 > span {
+            word-break: break-word;
+            white-space: normal;
+            overflow: hidden;
+        }
 
-/* Optimizing for PDF Capture: Aggressively smaller text to ensure fit within cells */
-.for-pdf-capture .scheduled-visit-display-tile {
-font-size: 8px !important; /* Significantly smaller baseline for print */
-line-height: 1 !important; /* Tightest possible line height */
-}
-.for-pdf-capture .scheduled-visit-display-tile .font-bold.uppercase {
-font-size: 9px !important; /* Type name slightly larger, but still tiny */
-line-height: 1 !important;
-}
-/* Ensure these overrides apply to all relevant text elements within the tile */
-.for-pdf-capture .scheduled-visit-display-tile > div,
-.for-pdf-capture .scheduled-visit-display-tile > span,
-.for-pdf-capture .scheduled-visit-display-tile div > div,
-.for-pdf-capture .scheduled-visit-display-tile div > span {
-font-size: 8px !important; /* Ensure all inner text is very small */
-line-height: 1 !important;
-}
-/* If time range text needs specific adjustments (often needs to be even smaller for 1.5 hr etc.) */
-.for-pdf-capture .scheduled-visit-display-tile .text-xs:last-child { /* Targets the last text-xs div, typically the time range */
-font-size: 7px !important; /* Potentially even smaller for secondary info */
-line-height: 1 !important;
-}
-</style>
+        /* Optimizing for PDF Capture: Aggressively smaller text to ensure fit within cells */
+        .for-pdf-capture .scheduled-visit-display-tile {
+            font-size: 8px !important; /* Significantly smaller baseline for print */
+            line-height: 1 !important; /* Tightest possible line height */
+        }
+        .for-pdf-capture .scheduled-visit-display-tile .font-bold.uppercase {
+            font-size: 9px !important; /* Type name slightly larger, but still tiny */
+            line-height: 1 !important;
+        }
+        /* Ensure these overrides apply to all relevant text elements within the tile */
+        .for-pdf-capture .scheduled-visit-display-tile > div,
+        .for-pdf-capture .scheduled-visit-display-tile > span,
+        .for-pdf-capture .scheduled-visit-display-tile div > div,
+        .for-pdf-capture .scheduled-visit-display-tile div > span {
+            font-size: 8px !important; /* Ensure all inner text is very small */
+            line-height: 1 !important;
+        }
+        /* If time range text needs specific adjustments (often needs to be even smaller for 1.5 hr etc.) */
+        .for-pdf-capture .scheduled-visit-display-tile .text-xs:last-child { /* Targets the last text-xs div, typically the time range */
+            font-size: 7px !important; /* Potentially even smaller for secondary info */
+            line-height: 1 !important;
+        }
+    </style>
 </head>
 <body class="font-sans text-gray-800 min-h-screen">
-<!-- Setup Modal -->
-<div id="setupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 hidden">
-<div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 overflow-y-auto max-h-screen">
-<div class="flex justify-between items-center mb-4">
-<h2 class="text-2xl font-bold text-[#009ef4]">Welcome to CAVA Ops Leader Calendar</h2>
-<button id="closeSetupModalBtn" class="text-gray-500 hover:text-gray-700">
-<i class="fas fa-times text-xl"></i>
-</button>
-</div>
-
-<div class="space-y-4">
-<div>
-<label for="setupUserNameInput" class="block text-sm font-medium text-gray-700">Your Name</label>
-<input type="text" id="setupUserNameInput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#009ef4] focus:ring focus:ring-[#009ef4] focus:ring-opacity-50 p-2 border" placeholder="Enter your full name">
-<p id="userNameError" class="mt-1 text-sm text-red-500 hidden">Please enter your name</p>
-</div>
-
-<div>
-<label for="setupRestaurantCountInput" class="block text-sm font-medium text-gray-700">Number of Restaurants You Manage</label>
-<input type="number" id="setupRestaurantCountInput" min="1" max="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#009ef4] focus:ring focus:ring-[#009ef4] focus:ring-opacity-50 p-2 border" placeholder="Enter number (1-20)">
-<p id="restaurantCountError" class="mt-1 text-sm text-red-500 hidden">Please enter a number between 1 and 20</p>
-</div>
-
-<div id="setupRestaurantNamesContainer" class="space-y-3">
-<!-- Restaurant name inputs will be added here dynamically -->
-</div>
-
-<div class="pt-4">
-<button id="startSchedulingButton" class="w-full bg-[#009ef4] text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-[#0083d1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009ef4] disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-Start Scheduling!
-</button>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Main App Container -->
-<div id="appContainer">
-<!-- Header -->
-<header class="sticky top-0 z-30 bg-white shadow-md">
-<!-- Top Row -->
-<div class="py-4 px-4">
-<div class="max-w-7xl mx-auto flex items-center justify-between">
-<div class="flex items-center space-x-4">
-<img src="https://github.com/Charles-Ehler/Cava-Calendar/blob/main/CavaLogo.png?raw=true" alt="CAVA Logo" class="w-24 h-24 object-contain">
-<div>
-<h1 class="text-2xl md:text-3xl font-bold text-[#009ef4]">Ops Leader Visit Calendar</h1>
-<p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
-</div>
-</div>
-
-<div class="flex items-end space-x-3 flex-wrap justify-end">
-<span id="areaLeaderNameDisplay" class="font-semibold text-[#da3d9d] hidden text-right"></span>
-
-<button id="editSetupButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
-<i class="fas fa-edit mr-1"></i> Edit Setup
-</button>
-
-<button id="instructionsButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
-<i class="fas fa-question-circle mr-1"></i> Instructions
-</button>
-
-<button id="downloadPdfButton" class="bg-[#009ef4] text-white font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#0083d1] focus:outline-none focus:ring-1 focus:ring-[#009ef4] text-sm">
-<i class="fas fa-download mr-1"></i> PDF
-</button>
-</div>
-</div>
-</div>
-
-<!-- Period Tabs Row -->
-<div class="pb-2 px-4 border-t border-gray-200">
-<div class="max-w-7xl mx-auto">
-<div class="flex justify-between items-center mt-2 mb-1 w-full">
-<div id="periodTabs" class="flex flex-wrap gap-2">
-<!-- Period tabs will be added dynamically -->
-</div>
-<div id="periodDateRange" class="text-right text-sm md:text-base text-gray-700 font-semibold hidden">
-<i class="fas fa-calendar-alt text-[#009ef4] mr-2"></i>
-<span id="periodRangeText"></span>
-</div>
-</div>
-</div>
-</div>
-</header>
-
-<!-- Main Content -->
-<main class="max-w-7xl mx-auto py-6 px-4">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-<!-- Visit Bank -->
-<div id="visitBankSection" class="lg:col-span-4 sticky-visit-bank bg-white rounded-xl shadow-lg p-4 mb-6 lg:max-h-[calc(100vh-148px)] lg:overflow-hidden lg:flex lg:flex-col">
-<h3 class="text-xl font-bold text-[#009ef4] mb-4 flex-shrink-0">Visit Bank</h3>
-<div id="visitBankContainer" class="space-y-3 h-full overflow-y-auto">
-<!-- Visit tiles will be added here dynamically -->
-</div>
-
-<div id="summaryStats" class="mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
-<h4 class="font-semibold text-gray-700 mb-2">Summary</h4>
-<div class="grid grid-cols-2 gap-2">
-<div class="bg-gray-100 p-2 rounded">
-<p class="text-xs text-gray-600">Total Visits</p>
-<p id="totalVisitsCount" class="font-bold">0</p>
-</div>
-<div class="bg-gray-100 p-2 rounded">
-<p class="text-xs text-gray-600">Scheduled</p>
-<p id="scheduledVisitsCount" class="font-bold">0</p>
-</div>
-<div class="bg-gray-100 p-2 rounded">
-<p class="text-xs text-gray-600">Remaining</p>
-<p id="remainingVisitsCount" class="font-bold">0</p>
-</div>
-<div class="bg-gray-100 p-2 rounded">
-<p class="text-xs text-gray-600">Completion</p>
-<p id="completionPercentage" class="font-bold">0%</p>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Calendar Grid -->
-<div id="calendarGridSection" class="lg:col-span-8 bg-white rounded-xl shadow-lg p-4 overflow-x-auto">
-<div id="calendarContainer">
-<!-- Calendar weeks will be added here dynamically -->
-</div>
-</div>
-</div>
-</main>
-</div>
-
-<!-- Instructions Modal -->
-<div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-<div class="bg-[#fff8e8] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
-<div class="flex justify-between items-center mb-4">
-<h2 class="text-2xl font-bold text-[#da3d9d]">Instructions</h2>
-<button id="closeInstructionsBtn" class="text-gray-500 hover:text-gray-700">
-<i class="fas fa-times"></i>
-</button>
-</div>
-<div class="space-y-4">
-<div>
-<h3 class="text-lg font-semibold text-[#009ef4]">Getting Started</h3>
-<p>1. Complete the setup by entering your name and restaurants.</p>
-<p>2. Select a fiscal period from the tabs at the top.</p>
-</div>
-<div>
-<h3 class="text-lg font-semibold text-[#009ef4]">Scheduling Visits</h3>
-<p>1. Drag visits from the Visit Bank to the calendar.</p>
-<p>2. Visits will automatically block the required time slots.</p>
-<p>3. Click the "x" on a scheduled visit to remove it.</p>
-</div>
-<div>
-<h3 class="text-lg font-semibold text-[#009ef4]">Visit Types</h3>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-<div class="bg-[#009ef4] text-white p-2 rounded">Quality Restaurant Audit (QRA) (5h)</div>
-<div class="bg-[#e8b2ee] p-2 rounded">Coaching (2h)</div>
-<div class="bg-[#f9d000] p-2 rounded">Guest Exp (1.5h)</div>
-<div class="bg-[#80ceff] p-2 rounded">Cash Audit (1h)</div>
-<div class="bg-[#da3d9d] text-white p-2 rounded">GM Impact (1h)</div>
-<div class="bg-[#959502] text-white p-2 rounded">Station Training (2h)</div>
-<div class="bg-[#bcdaff] p-2 rounded">Competency Champion (1h)</div>
-</div>
-</div>
-<div>
-<h3 class="text-lg font-semibold text-[#009ef4]">Exporting</h3>
-<p>Use the "Download PDF" button to export the current period's calendar.</p>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Reset Calendar Button -->
-<button id="resetCalendarButton" class="fixed bottom-6 right-6 z-[100] bg-red-600 text-white rounded-full shadow-lg px-4 py-3 flex items-center hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 hidden">
-<i class="fas fa-undo mr-2"></i> Reset Calendar
-</button>
-
-<script>
-// Global state object
-const state = {
-userProfile: {
-name: null,
-restaurants: []
-},
-ui: {
-currentPeriod: null,
-isSetupModalOpen: false,
-isFirstTimeUser: null,
-activeDragVisitId: null
-},
-fiscalCalendar: [
-{ period: 'P1', startDate: new Date('2024-12-30'), endDate: new Date('2025-01-26') },
-{ period: 'P2', startDate: new Date('2025-01-27'), endDate: new Date('2025-02-23') },
-{ period: 'P3', startDate: new Date('2025-02-24'), endDate: new Date('2025-03-23') },
-{ period: 'P4', startDate: new Date('2025-03-24'), endDate: new Date('2025-04-20') },
-{ period: 'P5', startDate: new Date('2025-04-21'), endDate: new Date('2025-05-18') },
-{ period: 'P6', startDate: new Date('2025-05-19'), endDate: new Date('2025-06-15') },
-{ period: 'P7', startDate: new Date('2025-06-17'), endDate: new Date('2025-07-14') },
-{ period: 'P8', startDate: new Date('2025-07-15'), endDate: new Date('2025-08-11') },
-{ period: 'P9', startDate: new Date('2025-08-12'), endDate: new Date('2025-09-08') },
-{ period: 'P10', startDate: new Date('2025-09-09'), endDate: new Date('2025-10-06') },
-{ period: 'P11', startDate: new Date('2025-10-07'), endDate: new Date('2025-11-03') },
-{ period: 'P12', startDate: new Date('2025-11-04'), endDate: new Date('2025-12-01') },
-{ period: 'P13', startDate: new Date('2025-12-02'), endDate: new Date('2025-12-29') }
-],
-qraPeriods: ['P1', 'P5', 'P8', 'P11'],
-visits: [],
-scheduledSlots: {}
-};
-
-// Utility functions
-function addDays(date, days) {
-const newDate = new Date(date);
-newDate.setDate(newDate.getDate() + days);
-return newDate;
-}
-
-function getDateString(date) {
-return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
-}
-
-function formatDate(date) {
-return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function getPeriodNumber(period) {
-return period.replace('P', '');
-}
-
-function format12Hour(hour) {
-if (hour === 0) return '12 AM';
-if (hour < 12) return `${hour} AM`;
-if (hour === 12) return '12 PM';
-return `${hour - 12} PM`;
-}
-
-function formatTimeRange(startHour, duration) {
-const formatHour = (hourFraction) => {
-const hour = Math.floor(hourFraction);
-const minute = Math.round((hourFraction % 1) * 60);
-const period = hour >= 12 ? 'PM' : 'AM';
-const displayHour = (hour % 12) || 12; // Convert 0 to 12
-
-if (minute === 0) {
-return `${displayHour} ${period}`; // Whole hour format
-} else {
-return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`; // Fractional hour format
-}
-};
-
-const endHour = startHour + duration;
-
-return `${formatHour(startHour)} – ${formatHour(endHour)}`;
-}
-
-
-function generateUUID() {
-return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-return v.toString(16);
-});
-}
-
-function findCurrentPeriod() {
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-
-for (const period of state.fiscalCalendar) {
-if (today >= period.startDate && today <= period.endDate) {
-return period.period;
-}
-}
-
-return 'P1'; // Default to first period if no match found
-}
-
-// Data persistence
-function loadState() {
-const savedState = localStorage.getItem('cavaCalendarState');
-if (savedState) {
-const parsedState = JSON.parse(savedState);
-
-// Check for minimal profile to consider it a returning user
-if (parsedState.userProfile && parsedState.userProfile.name && parsedState.userProfile.restaurants?.length > 0) {
-// Perform a deep merge, if needed, for other state properties
-state.userProfile = parsedState.userProfile;
-state.scheduledSlots = parsedState.scheduledSlots || {}; // Ensure scheduledSlots is always an object 
-state.ui.isFirstTimeUser = false;
-state.ui.isSetupModalOpen = false; // Ensure modal is closed for returning user
-return true; // State was successfully loaded
-}
-}
-
-// If no saved state found, or incomplete profile, treat as first-time user
-state.ui.isFirstTimeUser = true;
-state.ui.isSetupModalOpen = true; // Automatically open setup modal for first time or incomplete setup
-return false; // Indicate no full state was loaded
-}
-
-function saveState() {
-const stateToSave = {
-userProfile: state.userProfile,
-scheduledSlots: state.scheduledSlots
-};
-
-localStorage.setItem('cavaCalendarState', JSON.stringify(stateToSave));
-}
-
-// Visit generation logic
-function generateVisitsForPeriod(targetPeriod, restaurants) {
-const newVisitsThisPeriod = [];
-const isQraPeriod = state.qraPeriods.includes(targetPeriod);
-
-// Per-restaurant visits
-for (const restaurant of restaurants) {
-const restaurantId = restaurant.id || generateUUID();
-
-if (isQraPeriod) {
-// QRA visit for QRA periods
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-QRA-${restaurantId}`,
-type: 'QRA',
-duration: 5,
-location: restaurant.name,
-restaurantId: restaurantId,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#009ef4] text-white'
-});
-} else {
-// Coaching visit for standard periods
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-CV-${restaurantId}`,
-type: 'Coaching Visit',
-duration: 2,
-location: restaurant.name,
-restaurantId: restaurantId,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#e8b2ee]'
-});
-}
-
-// These visits exist in all periods
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-GE-${restaurantId}`,
-type: 'Guest Experience',
-duration: 1.5,
-location: restaurant.name,
-restaurantId: restaurantId,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#f9d000]'
-});
-
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-CA-${restaurantId}`,
-type: 'Cash Audit',
-duration: 1,
-location: restaurant.name,
-restaurantId: restaurantId,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#80ceff]'
-});
-
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-GMI-${restaurantId}`,
-type: 'GM Impact',
-duration: 1,
-location: restaurant.name,
-restaurantId: restaurantId,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#da3d9d] text-white'
-});
-}
-
-// Per-garden visits (always 1 per period)
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-STW-PerGarden`,
-type: 'Station Training Workshop',
-duration: 2,
-location: 'Per Garden',
-restaurantId: null,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#959502] text-white'
-});
-
-newVisitsThisPeriod.push({
-id: `${targetPeriod}-CC-PerGarden`,
-type: 'Competency Champion',
-duration: 1,
-location: 'Per Garden',
-restaurantId: null,
-required: 1,
-scheduled: 0,
-remaining: 1,
-color: 'bg-[#bcdaff]'
-});
-
-// Integrate with scheduled slots
-if (state.scheduledSlots[targetPeriod]) {
-const placedVisits = {};
-
-// Count all placed visits
-for (const slotKey in state.scheduledSlots[targetPeriod]) {
-const slot = state.scheduledSlots[targetPeriod][slotKey];
-if (slot.type === 'PLACED') {
-placedVisits[slot.visitId] = (placedVisits[slot.visitId] || 0) + 1;
-}
-}
-
-// Update visit counts
-for (const visit of newVisitsThisPeriod) {
-if (placedVisits[visit.id]) {
-visit.scheduled = placedVisits[visit.id];
-visit.remaining = Math.max(0, visit.required - visit.scheduled);
-}
-}
-}
-
-state.visits = newVisitsThisPeriod;
-}
-
-// Rendering functions
-function renderSetupModal() {
-const modal = document.getElementById('setupModal');
-modal.classList.toggle('hidden', !state.ui.isSetupModalOpen);
-
-if (state.ui.isSetupModalOpen) {
-// Pre-populate fields if editing
-const nameInput = document.getElementById('setupUserNameInput');
-const countInput = document.getElementById('setupRestaurantCountInput');
-
-if (state.userProfile.name) {
-nameInput.value = state.userProfile.name;
-}
-
-if (state.userProfile.restaurants.length > 0) {
-countInput.value = state.userProfile.restaurants.length;
-renderRestaurantNameInputs(state.userProfile.restaurants.length);
-
-// Pre-populate restaurant names
-const container = document.getElementById('setupRestaurantNamesContainer');
-const inputs = container.querySelectorAll('input[type="text"]');
-
-state.userProfile.restaurants.forEach((restaurant, index) => {
-if (inputs[index]) {
-inputs[index].value = restaurant.name;
-}
-});
-
-handleSetupValidation();
-}
-}
-}
-
-function renderRestaurantNameInputs(count) {
-const container = document.getElementById('setupRestaurantNamesContainer');
-
-// Capture current restaurant names before clearing
-const currentNames = [];
-const existingInputs = container.querySelectorAll('input[type="text"][id^="restaurantNameInput"]');
-existingInputs.forEach(input => {
-currentNames.push(input.value);
-});
-
-container.innerHTML = ''; // Now it's safe to clear
-
-for (let i = 0; i < count; i++) {
-const div = document.createElement('div');
-div.innerHTML = `
-                   <label for="restaurantNameInput${i}" class="block text-sm font-medium text-gray-700">Restaurant ${i + 1} Name</label>
-                   <input type="text" id="restaurantNameInput${i}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#009ef4] focus:ring focus:ring-[#009ef4] focus:ring-opacity-50 p-2 border" placeholder="Enter restaurant name">
-                   <p id="restaurantNameError${i}" class="mt-1 text-sm text-red-500 hidden">Please enter a restaurant name</p>
-               `;
-
-// Pre-fill the new input with the captured value, if available
-const newInput = div.querySelector(`#restaurantNameInput${i}`);
-if (newInput && currentNames[i] !== undefined) {
-newInput.value = currentNames[i];
-}
-
-container.appendChild(div);
-}
-
-// Add event listeners for validation
-const inputs = container.querySelectorAll('input[type="text"]');
-inputs.forEach(input => {
-input.addEventListener('input', handleSetupValidation);
-});
-}
-
-function handleSetupValidation() {
-let isValid = true;
-
-// Validate name
-const nameInput = document.getElementById('setupUserNameInput');
-const nameError = document.getElementById('userNameError');
-
-if (!nameInput.value.trim()) {
-nameError.classList.remove('hidden');
-isValid = false;
-} else {
-nameError.classList.add('hidden');
-}
-
-// Validate restaurant count
-const countInput = document.getElementById('setupRestaurantCountInput');
-const countError = document.getElementById('restaurantCountError');
-const count = parseInt(countInput.value);
-
-if (isNaN(count) || count < 1 || count > 20) {
-countError.classList.remove('hidden');
-isValid = false;
-} else {
-countError.classList.add('hidden');
-}
-
-// Validate restaurant names
-const container = document.getElementById('setupRestaurantNamesContainer');
-const nameInputs = container.querySelectorAll('input[type="text"]');
-
-nameInputs.forEach((input, index) => {
-const error = document.getElementById(`restaurantNameError${index}`);
-if (!input.value.trim()) {
-error.classList.remove('hidden');
-isValid = false;
-} else {
-error.classList.add('hidden');
-}
-});
-
-// Enable/disable submit button
-const submitButton = document.getElementById('startSchedulingButton');
-submitButton.disabled = !isValid;
-
-return isValid;
-}
-
-function handleSetupSubmit() {
-if (!handleSetupValidation()) return;
-
-// Save user profile
-state.userProfile.name = document.getElementById('setupUserNameInput').value.trim();
-
-// Save restaurants
-const count = parseInt(document.getElementById('setupRestaurantCountInput').value);
-const container = document.getElementById('setupRestaurantNamesContainer');
-const nameInputs = container.querySelectorAll('input[type="text"]');
-
-state.userProfile.restaurants = [];
-nameInputs.forEach(input => {
-state.userProfile.restaurants.push({
-id: generateUUID(),
-name: input.value.trim()
-});
-});
-
-// Close modal
-state.ui.isSetupModalOpen = false;
-
-// Set current period
-state.ui.currentPeriod = findCurrentPeriod();
-
-// Generate visits for the period
-generateVisitsForPeriod(state.ui.currentPeriod, state.userProfile.restaurants);
-
-// Save state and render app
-saveState();
-renderApp();
-}
-
-function renderHeader() {
-// Set user name display
-const nameDisplay = document.getElementById('areaLeaderNameDisplay');
-if (state.userProfile.name) {
-nameDisplay.textContent = state.userProfile.name;
-nameDisplay.classList.remove('hidden');
-} else {
-nameDisplay.classList.add('hidden');
-}
-
-// Populate period tabs
-const periodTabs = document.getElementById('periodTabs');
-periodTabs.innerHTML = '';
-
-// Update period date range display
-const periodDateRange = document.getElementById('periodDateRange');
-const periodRangeText = document.getElementById('periodRangeText');
-
-if (state.ui.currentPeriod) {
-const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
-if (currentPeriodData) {
-periodRangeText.textContent = `Period ${getPeriodNumber(state.ui.currentPeriod)}: ${formatDate(currentPeriodData.startDate)} – ${formatDate(currentPeriodData.endDate)}`;
-periodDateRange.classList.remove('hidden');
-} else {
-periodDateRange.classList.add('hidden');
-}
-} else {
-periodDateRange.classList.add('hidden');
-}
-
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-
-state.fiscalCalendar.forEach(period => {
-const tab = document.createElement('button');
-tab.textContent = period.period;
-tab.className = `px-3 py-1 border border-[#009ef4] rounded-md text-[#009ef4] hover:bg-[#e6f7ff] text-sm`;
-
-if (period.period === state.ui.currentPeriod) {
-tab.className = `px-3 py-1 bg-[#009ef4] text-white font-semibold rounded-md text-sm`;
-}
-
-// Style past periods differently and make them non-clickable
-if (period.endDate < today) {
-tab.className += ' opacity-50 relative cursor-not-allowed pointer-events-none';
-
-// Add "Period Passed" overlay
-const overlay = document.createElement('span');
-overlay.className = 'absolute -bottom-1 left-0 right-0 text-[8px] text-center text-gray-700';
-overlay.textContent = 'Period Passed';
-tab.appendChild(overlay);
-}
-
-// Make all periods clickable
-tab.addEventListener('click', () => {
-state.ui.currentPeriod = period.period;
-generateVisitsForPeriod(period.period, state.userProfile.restaurants);
-saveState();
-renderApp();
-});
-
-periodTabs.appendChild(tab);
-});
-}
-
-function renderVisitBank() {
-const visitBankContainer = document.getElementById('visitBankContainer');
-visitBankContainer.innerHTML = '';
-
-// Separate per-garden and per-restaurant visits
-const perGardenVisits = state.visits.filter(v => v.location === 'Per Garden');
-const perRestaurantVisits = state.visits.filter(v => v.location !== 'Per Garden');
-
-// Calculate summary stats
-let totalVisits = 0;
-let scheduledVisits = 0;
-let remainingVisits = 0;
-
-state.visits.forEach(visit => {
-totalVisits += visit.required;
-scheduledVisits += visit.scheduled;
-remainingVisits += visit.remaining;
-});
-
-const completionPercentage = totalVisits > 0 ? Math.round((scheduledVisits / totalVisits) * 100) : 0;
-
-// Update summary stats
-document.getElementById('totalVisitsCount').textContent = totalVisits;
-document.getElementById('scheduledVisitsCount').textContent = scheduledVisits;
-document.getElementById('remainingVisitsCount').textContent = remainingVisits;
-document.getElementById('completionPercentage').textContent = `${completionPercentage}%`;
-
-// Render per-garden visits
-if (perGardenVisits.length > 0) {
-const heading = document.createElement('h4');
-heading.className = 'font-semibold text-gray-700 mt-4 mb-2';
-heading.textContent = 'Static Visits';
-visitBankContainer.appendChild(heading);
-
-// Check if all per-garden visits are scheduled
-const allPerGardenScheduled = perGardenVisits.every(v => v.remaining === 0);
-
-perGardenVisits.forEach(visit => {
-if (visit.remaining > 0) {
-const tile = createVisitTile(visit);
-visitBankContainer.appendChild(tile);
-}
-});
-
-// Add completion message if all per-garden visits are scheduled
-if (allPerGardenScheduled) {
-const message = document.createElement('p');
-message.className = 'text-sm text-green-600 italic mt-2 pl-2';
-message.textContent = '✅ All visits scheduled for Per Garden.';
-visitBankContainer.appendChild(message);
-}
-}
-
-// Render per-restaurant visits
-if (perRestaurantVisits.length > 0) {
-const sectionDiv = document.createElement('div');
-
-const heading = document.createElement('h4');
-heading.className = 'font-semibold text-gray-700 mt-4 mb-2';
-heading.textContent = 'Per Restaurant Visits';
-sectionDiv.appendChild(heading);
-
-// Group visits by restaurant name
-const restaurantsMap = new Map();
-perRestaurantVisits.forEach(visit => {
-if (!restaurantsMap.has(visit.location)) {
-restaurantsMap.set(visit.location, []);
-}
-restaurantsMap.get(visit.location).push(visit);
-});
-
-// Iterate through grouped restaurants and render
-restaurantsMap.forEach((visitsForRestaurant, restaurantName) => {
-const restaurantSubHeading = document.createElement('h5');
-restaurantSubHeading.className = 'font-semibold text-[#009ef4] mt-3 mb-1 text-sm pl-2';
-restaurantSubHeading.textContent = restaurantName;
-sectionDiv.appendChild(restaurantSubHeading);
-
-// Check if all visits for this restaurant are scheduled
-const allScheduled = visitsForRestaurant.every(v => v.remaining === 0);
-
-visitsForRestaurant.forEach(visit => {
-if (visit.remaining > 0) {
-const tile = createVisitTile(visit);
-sectionDiv.appendChild(tile);
-}
-});
-
-// Add completion message if all visits are scheduled
-if (allScheduled) {
-const message = document.createElement('p');
-message.className = 'text-sm text-green-600 italic mt-2 pl-2';
-message.textContent = '✅ All visits scheduled for this restaurant.';
-sectionDiv.appendChild(message);
-}
-});
-
-visitBankContainer.appendChild(sectionDiv);
-}
-
-// Show message if no visits to schedule
-if (visitBankContainer.children.length === 0 || 
-(perGardenVisits.length > 0 && perRestaurantVisits.length > 0 && visitBankContainer.children.length === 2)) {
-const message = document.createElement('p');
-message.className = 'text-gray-500 italic text-center py-4';
-message.textContent = 'All visits scheduled for this period!';
-visitBankContainer.appendChild(message);
-}
-}
-
-function createVisitTile(visit) {
-const tile = document.createElement('div');
-tile.className = `p-3 rounded-lg shadow-md cursor-move hover:shadow-lg transition-shadow ${visit.color} ${visit.remaining === 0 ? 'opacity-50' : ''}`;
-tile.id = `visit-tile-${visit.id}`;
-tile.draggable = true;
-tile.dataset.visitId = visit.id;
-
-tile.innerHTML = `
-               <span class="font-bold text-sm uppercase">${
-                 visit.type === 'QRA' ? 'Quality Restaurant Audit (QRA)' : 
-                 visit.type === 'Guest Experience' ? 'Guest Experience Night/Weekend Visit' :
-                 visit.type === 'GM Impact' ? 'GM Impact Plan Conversation' :
-                 visit.type === 'Competency Champion' ? 'Competency Champion Training' :
-                 visit.type
-               }</span>
-               <span class="text-xs font-medium block">${visit.duration}h</span>
-               <div class="text-xs mt-1">${visit.location === 'Per Garden' ? '1 per period' : visit.location}</div>
-               <div class="text-xs mt-2">Remaining: ${visit.remaining}/${visit.required}</div>
-           `;
-
-return tile;
-}
-
-function createScheduledVisitElement(visit, week, day, hour) {
-const visitDiv = document.createElement('div');
-visitDiv.className = `scheduled-visit-display-tile rounded shadow-sm w-[calc(100%-4px)] inset-0 m-0.5 p-2 ${visit.color} z-20 overflow-hidden flex flex-col justify-between`;
-visitDiv.style.position = 'absolute';
-visitDiv.style.height = `${(visit.duration * 60) - 4}px`;
-
-            visitDiv.innerHTML = `
-                <div class="flex-shrink-0">
-                    <div class="flex justify-between items-start">
-                        <span class="font-bold uppercase block">${visit.type}</span>
-                        <button class="delete-visit absolute top-1 right-1 text-xs bg-white bg-opacity-30 rounded-full w-4 h-4 flex items-center justify-center hover:bg-opacity-70" data-visit-id="${visit.id}" data-slot-key="${week}-${day}-${hour}" data-start-hour="${hour}">
-                            <i class="fas fa-times text-[8px]"></i>
+    <!-- Setup Modal -->
+    <div id="setupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 overflow-y-auto max-h-screen">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-[#009ef4]">Welcome to CAVA Ops Leader Calendar</h2>
+                <button id="closeSetupModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="setupUserNameInput" class="block text-sm font-medium text-gray-700">Your Name</label>
+                    <input type="text" id="setupUserNameInput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#009ef4] focus:ring focus:ring-[#009ef4] focus:ring-opacity-50 p-2 border" placeholder="Enter your full name">
+                    <p id="userNameError" class="mt-1 text-sm text-red-500 hidden">Please enter your name</p>
+                </div>
+                
+                <div>
+                    <label for="setupRestaurantCountInput" class="block text-sm font-medium text-gray-700">Number of Restaurants You Manage</label>
+                    <input type="number" id="setupRestaurantCountInput" min="1" max="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#009ef4] focus:ring focus:ring-[#009ef4] focus:ring-opacity-50 p-2 border" placeholder="Enter number (1-20)">
+                    <p id="restaurantCountError" class="mt-1 text-sm text-red-500 hidden">Please enter a number between 1 and 20</p>
+                </div>
+                
+                <div id="setupRestaurantNamesContainer" class="space-y-3">
+                    <!-- Restaurant name inputs will be added here dynamically -->
+                </div>
+                
+                <div class="pt-4">
+                    <button id="startSchedulingButton" class="w-full bg-[#009ef4] text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:bg-[#0083d1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#009ef4] disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Start Scheduling!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="appContainer">
+        <!-- Header -->
+        <header class="sticky top-0 z-30 bg-white shadow-md">
+            <!-- Top Row -->
+            <div class="py-4 px-4">
+                <div class="max-w-7xl mx-auto flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <img src="https://github.com/Charles-Ehler/Cava-Calendar/blob/main/CavaLogo.png?raw=true" alt="CAVA Logo" class="w-24 h-24 object-contain">
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold text-[#009ef4]">Ops Leader Visit Calendar</h1>
+                            <p class="text-lg text-[#959502]">Schedule your visits for the selected period</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-end space-x-3 flex-wrap justify-end">
+                        <span id="areaLeaderNameDisplay" class="font-semibold text-[#da3d9d] hidden text-right"></span>
+                        
+                        <button id="editSetupButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit Setup
                         </button>
+                        
+                        <button id="instructionsButton" class="bg-[#f9d000] text-black font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#e6bb00] focus:outline-none focus:ring-1 focus:ring-[#f9d000] text-sm">
+                            <i class="fas fa-question-circle mr-1"></i> Instructions
+                        </button>
+                        
+                        <button id="downloadPdfButton" class="bg-[#009ef4] text-white font-semibold px-3 py-1 rounded-md shadow-sm hover:bg-[#0083d1] focus:outline-none focus:ring-1 focus:ring-[#009ef4] text-sm">
+                            <i class="fas fa-download mr-1"></i> PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Period Tabs Row -->
+            <div class="pb-2 px-4 border-t border-gray-200">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex justify-between items-center mt-2 mb-1 w-full">
+                        <div id="periodTabs" class="flex flex-wrap gap-2">
+                            <!-- Period tabs will be added dynamically -->
+                        </div>
+                        <div id="periodDateRange" class="text-right text-sm md:text-base text-gray-700 font-semibold hidden">
+                            <i class="fas fa-calendar-alt text-[#009ef4] mr-2"></i>
+                            <span id="periodRangeText"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-6 px-4">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Visit Bank -->
+                <div id="visitBankSection" class="lg:col-span-4 sticky-visit-bank bg-white rounded-xl shadow-lg p-4 mb-6 lg:max-h-[calc(100vh-148px)] lg:overflow-hidden lg:flex lg:flex-col">
+                    <h3 class="text-xl font-bold text-[#009ef4] mb-4 flex-shrink-0">Visit Bank</h3>
+                    <div id="visitBankContainer" class="space-y-3 h-full overflow-y-auto">
+                        <!-- Visit tiles will be added here dynamically -->
+                    </div>
+                    
+                    <div id="summaryStats" class="mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
+                        <h4 class="font-semibold text-gray-700 mb-2">Summary</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-gray-100 p-2 rounded">
+                                <p class="text-xs text-gray-600">Total Visits</p>
+                                <p id="totalVisitsCount" class="font-bold">0</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded">
+                                <p class="text-xs text-gray-600">Scheduled</p>
+                                <p id="scheduledVisitsCount" class="font-bold">0</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded">
+                                <p class="text-xs text-gray-600">Remaining</p>
+                                <p id="remainingVisitsCount" class="font-bold">0</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded">
+                                <p class="text-xs text-gray-600">Completion</p>
+                                <p id="completionPercentage" class="font-bold">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Calendar Grid -->
+                <div id="calendarGridSection" class="lg:col-span-8 bg-white rounded-xl shadow-lg p-4 overflow-x-auto">
+                    <div id="calendarContainer">
+                        <!-- Calendar weeks will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-[#fff8e8] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-[#da3d9d]">Instructions</h2>
+                <button id="closeInstructionsBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-[#009ef4]">Getting Started</h3>
+                    <p>1. Complete the setup by entering your name and restaurants.</p>
+                    <p>2. Select a fiscal period from the tabs at the top.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-[#009ef4]">Scheduling Visits</h3>
+                    <p>1. Drag visits from the Visit Bank to the calendar.</p>
+                    <p>2. Visits will automatically block the required time slots.</p>
+                    <p>3. Click the "x" on a scheduled visit to remove it.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-[#009ef4]">Visit Types</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div class="bg-[#009ef4] text-white p-2 rounded">Quality Restaurant Audit (QRA) (5h)</div>
+                        <div class="bg-[#e8b2ee] p-2 rounded">Coaching (2h)</div>
+                        <div class="bg-[#f9d000] p-2 rounded">Guest Exp (1.5h)</div>
+                        <div class="bg-[#80ceff] p-2 rounded">Cash Audit (1h)</div>
+                        <div class="bg-[#da3d9d] text-white p-2 rounded">GM Impact (1h)</div>
+                        <div class="bg-[#959502] text-white p-2 rounded">Station Training (2h)</div>
+                        <div class="bg-[#bcdaff] p-2 rounded">Competency Champion (1h)</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-[#009ef4]">Exporting</h3>
+                    <p>Use the "Download PDF" button to export the current period's calendar.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Calendar Button -->
+    <button id="resetCalendarButton" class="fixed bottom-6 right-6 z-[100] bg-red-600 text-white rounded-full shadow-lg px-4 py-3 flex items-center hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 hidden">
+        <i class="fas fa-undo mr-2"></i> Reset Calendar
+    </button>
+
+    <script>
+        // Global state object
+        const state = {
+            userProfile: {
+                name: null,
+                restaurants: []
+            },
+            ui: {
+                currentPeriod: null,
+                isSetupModalOpen: false,
+                isFirstTimeUser: null,
+                activeDragVisitId: null
+            },
+            fiscalCalendar: [
+                { period: 'P1', startDate: new Date('2024-12-30'), endDate: new Date('2025-01-26') },
+                { period: 'P2', startDate: new Date('2025-01-27'), endDate: new Date('2025-02-23') },
+                { period: 'P3', startDate: new Date('2025-02-24'), endDate: new Date('2025-03-23') },
+                { period: 'P4', startDate: new Date('2025-03-24'), endDate: new Date('2025-04-20') },
+                { period: 'P5', startDate: new Date('2025-04-21'), endDate: new Date('2025-05-18') },
+                { period: 'P6', startDate: new Date('2025-05-19'), endDate: new Date('2025-06-15') },
+                { period: 'P7', startDate: new Date('2025-06-17'), endDate: new Date('2025-07-14') },
+                { period: 'P8', startDate: new Date('2025-07-15'), endDate: new Date('2025-08-11') },
+                { period: 'P9', startDate: new Date('2025-08-12'), endDate: new Date('2025-09-08') },
+                { period: 'P10', startDate: new Date('2025-09-09'), endDate: new Date('2025-10-06') },
+                { period: 'P11', startDate: new Date('2025-10-07'), endDate: new Date('2025-11-03') },
+                { period: 'P12', startDate: new Date('2025-11-04'), endDate: new Date('2025-12-01') },
+                { period: 'P13', startDate: new Date('2025-12-02'), endDate: new Date('2025-12-29') }
+            ],
+            qraPeriods: ['P1', 'P5', 'P8', 'P11'],
+            visits: [],
+            scheduledSlots: {}
+        };
+
+        // Utility functions
+        function addDays(date, days) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() + days);
+            return newDate;
+        }
+
+        function getDateString(date) {
+            return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function getPeriodNumber(period) {
+            return period.replace('P', '');
+        }
+
+        function format12Hour(hour) {
+            if (hour === 0) return '12 AM';
+            if (hour < 12) return `${hour} AM`;
+            if (hour === 12) return '12 PM';
+            return `${hour - 12} PM`;
+        }
+
+        function formatTimeRange(startHour, duration) {
+            const formatHour = (hourFraction) => {
+                const hour = Math.floor(hourFraction);
+                const minute = Math.round((hourFraction % 1) * 60);
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = (hour % 12) || 12; // Convert 0 to 12
+
+                if (minute === 0) {
+                    return `${displayHour} ${period}`; // Whole hour format
+                } else {
+                    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`; // Fractional hour format
+                }
+            };
+
+            const endHour = startHour + duration;
+            
+            return `${formatHour(startHour)} – ${formatHour(endHour)}`;
+        }
+
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function findCurrentPeriod() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            for (const period of state.fiscalCalendar) {
+                if (today >= period.startDate && today <= period.endDate) {
+                    return period.period;
+                }
+            }
+            
+            return 'P1'; // Default to first period if no match found
+        }
+
+        // Data persistence
+        function loadState() {
+            const savedState = localStorage.getItem('cavaCalendarState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                
+                // Check for minimal profile to consider it a returning user
+                if (parsedState.userProfile && parsedState.userProfile.name && parsedState.userProfile.restaurants?.length > 0) {
+                    // Perform a deep merge, if needed, for other state properties
+                    state.userProfile = parsedState.userProfile;
+                    state.scheduledSlots = parsedState.scheduledSlots || {}; // Ensure scheduledSlots is always an object 
+                    state.ui.isFirstTimeUser = false;
+                    state.ui.isSetupModalOpen = false; // Ensure modal is closed for returning user
+                    return true; // State was successfully loaded
+                }
+            }
+            
+            // If no saved state found, or incomplete profile, treat as first-time user
+            state.ui.isFirstTimeUser = true;
+            state.ui.isSetupModalOpen = true; // Automatically open setup modal for first time or incomplete setup
+            return false; // Indicate no full state was loaded
+        }
+
+        function saveState() {
+            const stateToSave = {
+                userProfile: state.userProfile,
+                scheduledSlots: state.scheduledSlots
+            };
+            
+            localStorage.setItem('cavaCalendarState', JSON.stringify(stateToSave));
+        }
+
+        // Visit generation logic
+        function generateVisitsForPeriod(targetPeriod, restaurants) {
+            const newVisitsThisPeriod = [];
+            const isQraPeriod = state.qraPeriods.includes(targetPeriod);
+            
+            // Per-restaurant visits
+            for (const restaurant of restaurants) {
+                const restaurantId = restaurant.id || generateUUID();
+                
+                if (isQraPeriod) {
+                    // QRA visit for QRA periods
+                    newVisitsThisPeriod.push({
+                        id: `${targetPeriod}-QRA-${restaurantId}`,
+                        type: 'QRA',
+                        duration: 5,
+                        location: restaurant.name,
+                        restaurantId: restaurantId,
+                        required: 1,
+                        scheduled: 0,
+                        remaining: 1,
+                        color: 'bg-[#009ef4] text-white'
+                    });
+                } else {
+                    // Coaching visit for standard periods
+                    newVisitsThisPeriod.push({
+                        id: `${targetPeriod}-CV-${restaurantId}`,
+                        type: 'Coaching Visit',
+                        duration: 2,
+                        location: restaurant.name,
+                        restaurantId: restaurantId,
+                        required: 1,
+                        scheduled: 0,
+                        remaining: 1,
+                        color: 'bg-[#e8b2ee]'
+                    });
+                }
+                
+                // These visits exist in all periods
+                newVisitsThisPeriod.push({
+                    id: `${targetPeriod}-GE-${restaurantId}`,
+                    type: 'Guest Experience',
+                    duration: 1.5,
+                    location: restaurant.name,
+                    restaurantId: restaurantId,
+                    required: 1,
+                    scheduled: 0,
+                    remaining: 1,
+                    color: 'bg-[#f9d000]'
+                });
+                
+                newVisitsThisPeriod.push({
+                    id: `${targetPeriod}-CA-${restaurantId}`,
+                    type: 'Cash Audit',
+                    duration: 1,
+                    location: restaurant.name,
+                    restaurantId: restaurantId,
+                    required: 1,
+                    scheduled: 0,
+                    remaining: 1,
+                    color: 'bg-[#80ceff]'
+                });
+                
+                newVisitsThisPeriod.push({
+                    id: `${targetPeriod}-GMI-${restaurantId}`,
+                    type: 'GM Impact',
+                    duration: 1,
+                    location: restaurant.name,
+                    restaurantId: restaurantId,
+                    required: 1,
+                    scheduled: 0,
+                    remaining: 1,
+                    color: 'bg-[#da3d9d] text-white'
+                });
+            }
+            
+            // Per-garden visits (always 1 per period)
+            newVisitsThisPeriod.push({
+                id: `${targetPeriod}-STW-PerGarden`,
+                type: 'Station Training Workshop',
+                duration: 2,
+                location: 'Per Garden',
+                restaurantId: null,
+                required: 1,
+                scheduled: 0,
+                remaining: 1,
+                color: 'bg-[#959502] text-white'
+            });
+            
+            newVisitsThisPeriod.push({
+                id: `${targetPeriod}-CC-PerGarden`,
+                type: 'Competency Champion',
+                duration: 1,
+                location: 'Per Garden',
+                restaurantId: null,
+                required: 1,
+                scheduled: 0,
+                remaining: 1,
+                color: 'bg-[#bcdaff]'
+            });
+            
+            // Integrate with scheduled slots
+            if (state.scheduledSlots[targetPeriod]) {
+                const placedVisits = {};
+                
+                // Count all placed visits
+                for (const slotKey in state.scheduledSlots[targetPeriod]) {
+                    const slot = state.scheduledSlots[targetPeriod][slotKey];
+                    if (slot.type === 'PLACED') {
+                        placedVisits[slot.visitId] = (placedVisits[slot.visitId] || 0) + 1;
+                    }
+                }
+                
+                // Update visit counts
+                for (const visit of newVisitsThisPeriod) {
+                    if (placedVisits[visit.id]) {
+                        visit.scheduled = placedVisits[visit.id];
+                        visit.remaining = Math.max(0, visit.required - visit.scheduled);
+                    }
+                }
+            }
+            
+            state.visits = newVisitsThisPeriod;
+        }
+
+        // Rendering functions
+        function renderSetupModal() {
+            const modal = document.getElementById('setupModal');
+            modal.classList.toggle('hidden', !state.ui.isSetupModalOpen);
+            
+            if (state.ui.isSetupModalOpen) {
+                // Pre-populate fields if editing
+                const nameInput = document.getElementById('setupUserNameInput');
+                const countInput = document.getElementById('setupRestaurantCountInput');
+                
+                if (state.userProfile.name) {
+                    nameInput.value = state.userProfile.name;
+                }
+                
+                if (state.userProfile.restaurants.length > 0) {
+                    countInput.value = state.userProfile.restaurants.length;
+                    renderRestaurantNameInputs(state.userProfile.restaurants.length);
+                    
+                    // Pre-populate restaurant names
+                    const container = document.getElementById('setupRestaurantNamesContainer');
+                    const inputs = container.querySelectorAll('input[type="text"]');
+                    
+                    state.userProfile.restaurants.forEach((restaurant, index) => {
+                        if (inputs[index]) {
+                            inputs[index].value = restaurant.name;
+                        }
+                    });
+                    
+                    handleSetupValidation();
+                }
+            }
+        }
+
+        function renderRestaurantNameInputs(count) {
+            const container = document.getElementById('setupRestaurantNamesContainer');
+            
+            // Capture current restaurant names before clearing
+            const currentNames = [];
+            const existingInputs = container.querySelectorAll('input[type="text"][id^="restaurantNameInput"]');
+            existingInputs.forEach(input => {
+                currentNames.push(input.value);
+            });
+            
+            container.innerHTML = ''; // Now it's safe to clear
+            
+            for (let i = 0; i < count; i++) {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label for="restaurantNameInput${i}" class="block text-sm font-medium text-gray-700">Restaurant ${i + 1} Name</label>
+                    <input type="text" id="restaurantNameInput${i}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#009ef4] focus:ring focus:ring-[#009ef4] focus:ring-opacity-50 p-2 border" placeholder="Enter restaurant name">
+                    <p id="restaurantNameError${i}" class="mt-1 text-sm text-red-500 hidden">Please enter a restaurant name</p>
+                `;
+                
+                // Pre-fill the new input with the captured value, if available
+                const newInput = div.querySelector(`#restaurantNameInput${i}`);
+                if (newInput && currentNames[i] !== undefined) {
+                    newInput.value = currentNames[i];
+                }
+                
+                container.appendChild(div);
+            }
+            
+            // Add event listeners for validation
+            const inputs = container.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', handleSetupValidation);
+            });
+        }
+
+        function handleSetupValidation() {
+            let isValid = true;
+            
+            // Validate name
+            const nameInput = document.getElementById('setupUserNameInput');
+            const nameError = document.getElementById('userNameError');
+            
+            if (!nameInput.value.trim()) {
+                nameError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                nameError.classList.add('hidden');
+            }
+            
+            // Validate restaurant count
+            const countInput = document.getElementById('setupRestaurantCountInput');
+            const countError = document.getElementById('restaurantCountError');
+            const count = parseInt(countInput.value);
+            
+            if (isNaN(count) || count < 1 || count > 20) {
+                countError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                countError.classList.add('hidden');
+            }
+            
+            // Validate restaurant names
+            const container = document.getElementById('setupRestaurantNamesContainer');
+            const nameInputs = container.querySelectorAll('input[type="text"]');
+            
+            nameInputs.forEach((input, index) => {
+                const error = document.getElementById(`restaurantNameError${index}`);
+                if (!input.value.trim()) {
+                    error.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    error.classList.add('hidden');
+                }
+            });
+            
+            // Enable/disable submit button
+            const submitButton = document.getElementById('startSchedulingButton');
+            submitButton.disabled = !isValid;
+            
+            return isValid;
+        }
+
+        function handleSetupSubmit() {
+            if (!handleSetupValidation()) return;
+            
+            // Save user profile
+            state.userProfile.name = document.getElementById('setupUserNameInput').value.trim();
+            
+            // Save restaurants
+            const count = parseInt(document.getElementById('setupRestaurantCountInput').value);
+            const container = document.getElementById('setupRestaurantNamesContainer');
+            const nameInputs = container.querySelectorAll('input[type="text"]');
+            
+            state.userProfile.restaurants = [];
+            nameInputs.forEach(input => {
+                state.userProfile.restaurants.push({
+                    id: generateUUID(),
+                    name: input.value.trim()
+                });
+            });
+            
+            // Close modal
+            state.ui.isSetupModalOpen = false;
+            
+            // Set current period
+            state.ui.currentPeriod = findCurrentPeriod();
+            
+            // Generate visits for the period
+            generateVisitsForPeriod(state.ui.currentPeriod, state.userProfile.restaurants);
+            
+            // Save state and render app
+            saveState();
+            renderApp();
+        }
+
+        function renderHeader() {
+            // Set user name display
+            const nameDisplay = document.getElementById('areaLeaderNameDisplay');
+            if (state.userProfile.name) {
+                nameDisplay.textContent = state.userProfile.name;
+                nameDisplay.classList.remove('hidden');
+            } else {
+                nameDisplay.classList.add('hidden');
+            }
+            
+            // Populate period tabs
+            const periodTabs = document.getElementById('periodTabs');
+            periodTabs.innerHTML = '';
+
+            // Update period date range display
+            const periodDateRange = document.getElementById('periodDateRange');
+            const periodRangeText = document.getElementById('periodRangeText');
+            
+            if (state.ui.currentPeriod) {
+                const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
+                if (currentPeriodData) {
+                    periodRangeText.textContent = `Period ${getPeriodNumber(state.ui.currentPeriod)}: ${formatDate(currentPeriodData.startDate)} – ${formatDate(currentPeriodData.endDate)}`;
+                    periodDateRange.classList.remove('hidden');
+                } else {
+                    periodDateRange.classList.add('hidden');
+                }
+            } else {
+                periodDateRange.classList.add('hidden');
+            }
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            state.fiscalCalendar.forEach(period => {
+                const tab = document.createElement('button');
+                tab.textContent = period.period;
+                tab.className = `px-3 py-1 border border-[#009ef4] rounded-md text-[#009ef4] hover:bg-[#e6f7ff] text-sm`;
+                
+                if (period.period === state.ui.currentPeriod) {
+                    tab.className = `px-3 py-1 bg-[#009ef4] text-white font-semibold rounded-md text-sm`;
+                }
+                
+                // Style past periods differently and make them non-clickable
+                if (period.endDate < today) {
+                    tab.className += ' opacity-50 relative cursor-not-allowed pointer-events-none';
+                    
+                    // Add "Period Passed" overlay
+                    const overlay = document.createElement('span');
+                    overlay.className = 'absolute -bottom-1 left-0 right-0 text-[8px] text-center text-gray-700';
+                    overlay.textContent = 'Period Passed';
+                    tab.appendChild(overlay);
+                }
+                
+                // Make all periods clickable
+                tab.addEventListener('click', () => {
+                    state.ui.currentPeriod = period.period;
+                    generateVisitsForPeriod(period.period, state.userProfile.restaurants);
+                    saveState();
+                    renderApp();
+                });
+                
+                periodTabs.appendChild(tab);
+            });
+        }
+
+        function renderVisitBank() {
+            const visitBankContainer = document.getElementById('visitBankContainer');
+            visitBankContainer.innerHTML = '';
+            
+            // Separate per-garden and per-restaurant visits
+            const perGardenVisits = state.visits.filter(v => v.location === 'Per Garden');
+            const perRestaurantVisits = state.visits.filter(v => v.location !== 'Per Garden');
+            
+            // Calculate summary stats
+            let totalVisits = 0;
+            let scheduledVisits = 0;
+            let remainingVisits = 0;
+            
+            state.visits.forEach(visit => {
+                totalVisits += visit.required;
+                scheduledVisits += visit.scheduled;
+                remainingVisits += visit.remaining;
+            });
+            
+            const completionPercentage = totalVisits > 0 ? Math.round((scheduledVisits / totalVisits) * 100) : 0;
+            
+            // Update summary stats
+            document.getElementById('totalVisitsCount').textContent = totalVisits;
+            document.getElementById('scheduledVisitsCount').textContent = scheduledVisits;
+            document.getElementById('remainingVisitsCount').textContent = remainingVisits;
+            document.getElementById('completionPercentage').textContent = `${completionPercentage}%`;
+            
+            // Render per-garden visits
+            if (perGardenVisits.length > 0) {
+                const heading = document.createElement('h4');
+                heading.className = 'font-semibold text-gray-700 mt-4 mb-2';
+                heading.textContent = 'Static Visits';
+                visitBankContainer.appendChild(heading);
+                
+                // Check if all per-garden visits are scheduled
+                const allPerGardenScheduled = perGardenVisits.every(v => v.remaining === 0);
+                
+                perGardenVisits.forEach(visit => {
+                    if (visit.remaining > 0) {
+                        const tile = createVisitTile(visit);
+                        visitBankContainer.appendChild(tile);
+                    }
+                });
+
+                // Add completion message if all per-garden visits are scheduled
+                if (allPerGardenScheduled) {
+                    const message = document.createElement('p');
+                    message.className = 'text-sm text-green-600 italic mt-2 pl-2';
+                    message.textContent = '✅ All visits scheduled for Per Garden.';
+                    visitBankContainer.appendChild(message);
+                }
+            }
+            
+            // Render per-restaurant visits
+            if (perRestaurantVisits.length > 0) {
+                const sectionDiv = document.createElement('div');
+                
+                const heading = document.createElement('h4');
+                heading.className = 'font-semibold text-gray-700 mt-4 mb-2';
+                heading.textContent = 'Per Restaurant Visits';
+                sectionDiv.appendChild(heading);
+
+                // Group visits by restaurant name
+                const restaurantsMap = new Map();
+                perRestaurantVisits.forEach(visit => {
+                    if (!restaurantsMap.has(visit.location)) {
+                        restaurantsMap.set(visit.location, []);
+                    }
+                    restaurantsMap.get(visit.location).push(visit);
+                });
+
+                // Iterate through grouped restaurants and render
+                restaurantsMap.forEach((visitsForRestaurant, restaurantName) => {
+                    const restaurantSubHeading = document.createElement('h5');
+                    restaurantSubHeading.className = 'font-semibold text-[#009ef4] mt-3 mb-1 text-sm pl-2';
+                    restaurantSubHeading.textContent = restaurantName;
+                    sectionDiv.appendChild(restaurantSubHeading);
+
+                    // Check if all visits for this restaurant are scheduled
+                    const allScheduled = visitsForRestaurant.every(v => v.remaining === 0);
+                    
+                    visitsForRestaurant.forEach(visit => {
+                        if (visit.remaining > 0) {
+                            const tile = createVisitTile(visit);
+                            sectionDiv.appendChild(tile);
+                        }
+                    });
+
+                    // Add completion message if all visits are scheduled
+                    if (allScheduled) {
+                        const message = document.createElement('p');
+                        message.className = 'text-sm text-green-600 italic mt-2 pl-2';
+                        message.textContent = '✅ All visits scheduled for this restaurant.';
+                        sectionDiv.appendChild(message);
+                    }
+                });
+
+                visitBankContainer.appendChild(sectionDiv);
+            }
+            
+            // Show message if no visits to schedule
+            if (visitBankContainer.children.length === 0 || 
+                (perGardenVisits.length > 0 && perRestaurantVisits.length > 0 && visitBankContainer.children.length === 2)) {
+                const message = document.createElement('p');
+                message.className = 'text-gray-500 italic text-center py-4';
+                message.textContent = 'All visits scheduled for this period!';
+                visitBankContainer.appendChild(message);
+            }
+        }
+
+        function createVisitTile(visit) {
+            const tile = document.createElement('div');
+            tile.className = `p-3 rounded-lg shadow-md cursor-move hover:shadow-lg transition-shadow ${visit.color} ${visit.remaining === 0 ? 'opacity-50' : ''}`;
+            tile.id = `visit-tile-${visit.id}`;
+            tile.draggable = true;
+            tile.dataset.visitId = visit.id;
+            
+            tile.innerHTML = `
+                <span class="font-bold text-sm uppercase">${
+                  visit.type === 'QRA' ? 'Quality Restaurant Audit (QRA)' : 
+                  visit.type === 'Guest Experience' ? 'Guest Experience Night/Weekend Visit' :
+                  visit.type === 'GM Impact' ? 'GM Impact Plan Conversation' :
+                  visit.type === 'Competency Champion' ? 'Competency Champion Training' :
+                  visit.type
+                }</span>
+                <span class="text-xs font-medium block">${visit.duration}h</span>
+                <div class="text-xs mt-1">${visit.location === 'Per Garden' ? '1 per period' : visit.location}</div>
+                <div class="text-xs mt-2">Remaining: ${visit.remaining}/${visit.required}</div>
+            `;
+            
+            return tile;
+        }
+
+        function createScheduledVisitElement(visit, week, day, hour) {
+            const visitDiv = document.createElement('div');
+            visitDiv.className = `scheduled-visit-display-tile rounded shadow-sm w-[calc(100%-4px)] inset-0 m-0.5 p-2 ${visit.color} z-20 overflow-hidden flex flex-col justify-between`;
+            visitDiv.style.position = 'absolute';
+            visitDiv.style.height = `${(visit.duration * 60) - 4}px`;
+            
             if (visit.location === 'Per Garden') {
                 // Simplified display for static visits
                 visitDiv.innerHTML = `
@@ -893,13 +886,7 @@ visitDiv.style.height = `${(visit.duration * 60) - 4}px`;
                                 <i class="fas fa-times text-[8px]"></i>
                             </button>
                         </div>
-                   </div>
-                    <div class="mt-1 leading-tight">${visit.location}</div>
-                </div>
-                <div class="flex-shrink-0 text-xs text-right mt-auto">
-                    ${formatTimeRange(hour, visit.duration)}
-                </div>
-            `;
+                    </div>
                     <div class="flex-shrink-0 text-xs text-right mt-auto">
                         ${formatTimeRange(hour, visit.duration)}
                     </div>
@@ -922,669 +909,668 @@ visitDiv.style.height = `${(visit.duration * 60) - 4}px`;
                 `;
             }
 
-if (visit.color.includes('text-white')) {
-visitDiv.classList.add('text-white');
-} else {
-visitDiv.classList.remove('text-white');
-}
-
-const deleteBtn = visitDiv.querySelector('.delete-visit');
-if (deleteBtn) {
-deleteBtn.addEventListener('click', handleDeleteVisit);
-}
-
-return visitDiv;
-}
-
-function renderCalendar() {
-const calendarContainer = document.getElementById('calendarContainer');
-calendarContainer.innerHTML = '';
-
-if (!state.ui.currentPeriod) return;
-
-// Find the current period data
-const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
-if (!currentPeriodData) return;
-
-const alignedStart = new Date(currentPeriodData.startDate); // Already a Monday
-
-// Render 4 weeks
-for (let weekIndex = 0; weekIndex < 4; weekIndex++) {
-const weekStart = new Date(alignedStart);
-weekStart.setDate(alignedStart.getDate() + weekIndex * 7);
-
-const weekEnd = new Date(weekStart);
-weekEnd.setDate(weekStart.getDate() + 6);
-
-const weekContainer = document.createElement('div');
-weekContainer.id = `week-${weekIndex}`;
-weekContainer.className = 'mb-8';
-
-const weekHeader = document.createElement('h3');
-weekHeader.className = 'text-lg font-bold text-[#009ef4] mb-2';
-weekHeader.textContent = `Week ${weekIndex + 1}: ${weekStart.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })} – ${weekEnd.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}`;
-
-if (state.userProfile.name) {
-const nameSpan = document.createElement('span');
-nameSpan.className = 'ml-2 text-[#da3d9d]';
-nameSpan.textContent = state.userProfile.name;
-weekHeader.appendChild(nameSpan);
-}
-
-weekContainer.appendChild(weekHeader);
-
-// Create calendar table
-const table = document.createElement('table');
-table.className = 'w-full border-collapse';
-
-// Create table header (days of week)
-const thead = document.createElement('thead');
-thead.innerHTML = `
-                   <tr>
-                       <th class="w-16 h-12 border border-blue-200 sticky-time">Time</th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Mon</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 0))}</div>
-                       </th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Tue</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 1))}</div>
-                       </th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Wed</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 2))}</div>
-                       </th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Thu</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 3))}</div>
-                       </th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Fri</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 4))}</div>
-                       </th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Sat</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 5))}</div>
-                       </th>
-                       <th class="border border-gray-200 p-2 text-center sticky-day-header">
-                           <div class="font-bold">Sun</div>
-                           <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 6))}</div>
-                       </th>
-                   </tr>
-               `;
-table.appendChild(thead);
-
-// Create table body (time slots)
-const tbody = document.createElement('tbody');
-
-// Hours from 8 AM to 10 PM
-for (let hour = 8; hour <= 22; hour++) {
-const row = document.createElement('tr');
-row.className = 'hour-cell';
-
-// Time cell
-const timeCell = document.createElement('td');
-timeCell.className = 'w-16 border border-gray-200 bg-[#e6f7ff] p-1 sticky-time text-center text-xs';
-timeCell.textContent = format12Hour(hour);
-row.appendChild(timeCell);
-
-// Day cells (Monday to Sunday)
-for (let day = 1; day <= 7; day++) {
-const dayCell = document.createElement('td');
-dayCell.className = 'border border-gray-200 p-0 relative drop-zone';
-dayCell.dataset.week = weekIndex;
-dayCell.dataset.day = day;
-dayCell.dataset.hour = hour;
-
-const slotKey = `${weekIndex}-${day}-${hour}`;
-const scheduledSlot = state.scheduledSlots[state.ui.currentPeriod]?.[slotKey];
-
-// Apply base drop zone class for all interactive cells
-dayCell.classList.add('drop-zone');
-dayCell.addEventListener('dragover', handleDragOver);
-dayCell.addEventListener('dragleave', handleDragLeave);
-dayCell.addEventListener('drop', handleDrop);
-
-if (scheduledSlot) {
-// Remove drop-zone events if occupied
-dayCell.classList.remove('drop-zone');
-dayCell.removeEventListener('dragover', handleDragOver);
-dayCell.removeEventListener('dragleave', handleDragLeave);
-dayCell.removeEventListener('drop', handleDrop);
-
-if (scheduledSlot.type === 'PLACED') {
-const visit = state.visits.find(v => v.id === scheduledSlot.visitId);
-if (visit) {
-const visitDiv = createScheduledVisitElement(visit, weekIndex, day, hour);
-dayCell.appendChild(visitDiv);
-}
-dayCell.style.backgroundColor = 'transparent';
-dayCell.title = '';
-} else if (scheduledSlot.type === 'BLOCKED') {
-dayCell.style.backgroundColor = 'transparent';
-dayCell.classList.add('cursor-not-allowed');
-dayCell.title = 'This time is blocked by a multi-hour visit';
-}
-} else {
-dayCell.style.backgroundColor = '';
-dayCell.title = '';
-}
-
-row.appendChild(dayCell);
-}
-
-tbody.appendChild(row);
-}
-
-table.appendChild(tbody);
-weekContainer.appendChild(table);
-calendarContainer.appendChild(weekContainer);
-}
-
-// Show/hide reset button based on whether there are scheduled visits
-const resetButton = document.getElementById('resetCalendarButton');
-if (state.scheduledSlots[state.ui.currentPeriod] && Object.keys(state.scheduledSlots[state.ui.currentPeriod]).length > 0) {
-resetButton.classList.remove('hidden');
-} else {
-resetButton.classList.add('hidden');
-}
-}
-
-function getDateForWeekDay(weekIndex, dayOfWeek, periodStartDate) {
-// dayOfWeek: 1=Monday, 2=Tuesday, ..., 7=Sunday
-const date = new Date(periodStartDate);
-
-// Adjust to Monday of the current week
-const currentDayOfWeek = date.getDay(); // 0=Sun, 1=Mon, etc.
-const diffToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // Days to subtract to get Monday
-
-// Set to Monday of the first week
-date.setDate(date.getDate() - diffToMonday + (weekIndex * 7));
-
-// Add days for the specific weekday (0=Monday, 6=Sunday)
-date.setDate(date.getDate() + (dayOfWeek - 1));
-
-return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
-}
-
-function renderApp() {
-const appContainer = document.getElementById('appContainer');
-const setupModal = document.getElementById('setupModal');
-
-if (state.ui.isSetupModalOpen) {
-appContainer.classList.add('hidden'); // Main app hidden when modal is open
-setupModal.classList.remove('hidden'); // Modal visible
-renderSetupModal(); // Call render logic for the setup modal
-} else {
-appContainer.classList.remove('hidden'); // Main app visible when modal is closed
-setupModal.classList.add('hidden'); // Modal hidden
-
-renderHeader();
-
-// Only render Visit Bank and Calendar if user profile and restaurants are definitively loaded.
-// This prevents an empty-looking app when user data is incomplete.
-if (state.userProfile.name && state.userProfile.restaurants?.length > 0) { // Added check for restaurants.length
-renderVisitBank();
-renderCalendar();
-} else {
-// Optional: Add a message here if profile is incomplete and app is visible
-// e.g., calendarContainer.innerHTML = '<p class="text-center text-gray-500 py-12">Please complete your profile to see the calendar.</p>';
-// This would be visible if a user somehow closed the setup modal prematurely or deleted their restaurants.
-document.getElementById('calendarContainer').innerHTML = ''; // Clear old content if no profile
-document.getElementById('visitBankContainer').innerHTML = '<p class="text-gray-500 italic text-center py-4">Complete setup to create visits.</p>';
-document.getElementById('summaryStats').innerHTML = '<h4 class="font-semibold text-gray-700 mb-2">Summary</h4><p class="text-gray-500 text-center">N/A</p>';
-}
-}
-}
-
-// Event handlers
-function handleDragStart(e) {
-if (!e.target.dataset.visitId) return;
-
-state.ui.activeDragVisitId = e.target.dataset.visitId;
-e.dataTransfer.setData('text/plain', e.target.dataset.visitId);
-e.target.classList.add('opacity-30');
-}
-
-function handleDragEnd(e) {
-if (!e.target.dataset.visitId) return;
-
-e.target.classList.remove('opacity-30');
-state.ui.activeDragVisitId = null;
-}
-
-function handleDragOver(e) {
-if (!e.target.classList.contains('drop-zone') || e.target.classList.contains('bg-gray-300')) {
-return;
-}
-
-e.preventDefault();
-
-// Check if this slot is available
-const week = e.target.dataset.week;
-const day = e.target.dataset.day;
-const hour = parseInt(e.target.dataset.hour);
-
-const visit = state.visits.find(v => v.id === state.ui.activeDragVisitId);
-if (!visit) return;
-
-// Check all hours this visit would occupy
-let hasConflict = false;
-for (let h = hour; h < hour + visit.duration; h++) {
-const slotKey = `${week}-${day}-${h}`;
-
-if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][slotKey]) {
-hasConflict = true;
-break;
-}
-}
-
-if (!hasConflict) {
-e.target.classList.add('drop-zone-hover');
-}
-}
-
-function handleDragLeave(e) {
-e.target.classList.remove('drop-zone-hover');
-}
-
-function handleDrop(e) {
-e.preventDefault();
-e.target.classList.remove('drop-zone-hover');
-
-if (!state.ui.activeDragVisitId) return;
-
-// Ensure the drop happened on a valid, unblocked drop zone BEFORE trying to get visit data
-if (!e.target.classList.contains('drop-zone') || e.target.classList.contains('bg-gray-300')) {
-// Optionally, if state.ui.activeDragVisitId is set, it means a drag started
-// but it was released on an invalid target. We just quietly clean up.
-const draggedTile = document.getElementById(`visit-tile-${state.ui.activeDragVisitId}`);
-if(draggedTile) draggedTile.classList.remove('opacity-30');
-state.ui.activeDragVisitId = null; // Clear active drag ID
-return; // Exit early as this is not a valid drop target for scheduling.
-}
-
-// Try to get from dataTransfer first, fall back to the actively dragged ID
-let visitId = e.dataTransfer.getData('text/plain');
-if (!visitId) {
-visitId = state.ui.activeDragVisitId;
-}
-const visit = state.visits.find(v => v.id === visitId);
-
-if (!visit || visit.remaining <= 0) {
-alert('This visit cannot be scheduled – no remaining instances or invalid visit');
-const draggedTile = document.getElementById(`visit-tile-${visitId}`);
-if (draggedTile) draggedTile.classList.remove('opacity-30');
-state.ui.activeDragVisitId = null;
-return;
-}
-
-const week = e.target.dataset.week;
-const day = e.target.dataset.day;
-const hour = parseInt(e.target.dataset.hour);
-
-// Check all hours this visit would occupy
-let hasConflict = false;
-for (let h = hour; h < hour + visit.duration; h++) {
-const slotKey = `${week}-${day}-${h}`;
-
-if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][slotKey]) {
-hasConflict = true;
-break;
-}
-}
-
-if (hasConflict) {
-alert('Cannot schedule visit - time slot is already occupied');
-return;
-}
-
-// Update visit counts
-visit.scheduled++;
-visit.remaining--;
-
-// Update scheduled slots
-if (!state.scheduledSlots[state.ui.currentPeriod]) {
-state.scheduledSlots[state.ui.currentPeriod] = {};
-}
-
-const startSlotKey = `${week}-${day}-${hour}`;
-state.scheduledSlots[state.ui.currentPeriod][startSlotKey] = {
-type: 'PLACED',
-visitId: visitId,
-startHour: hour // Add startHour to scheduledSlots entry
-};
-
-// Mark subsequent hours as blocked
-for (let h = hour + 1; h < hour + visit.duration; h++) {
-const slotKey = `${week}-${day}-${h}`;
-state.scheduledSlots[state.ui.currentPeriod][slotKey] = {
-type: 'BLOCKED',
-parentVisitId: visitId
-};
-}
-
-// Save state and re-render
-saveState();
-renderApp();
-
-state.ui.activeDragVisitId = null;
-}
-
-function handleDeleteVisit(e) {
-if (!e.target.closest('button')) return;
-
-const button = e.target.closest('button');
-const visitId = button.dataset.visitId;
-const startHour = parseInt(button.dataset.startHour);
-const week = parseInt(button.dataset.slotKey.split('-')[0]);
-const day = parseInt(button.dataset.slotKey.split('-')[1]);
-
-if (!visitId || isNaN(startHour)) return;
-
-const visit = state.visits.find(v => v.id === visitId);
-if (!visit) return;
-
-// Safely decrement scheduled count with bounds checking
-if (visit.scheduled > 0) {
-visit.scheduled--;
-visit.remaining = Math.min(visit.required, visit.remaining + 1); // Ensure remaining doesn't exceed required
-}
-
-// Remove all time slots for this visit
-for (let h = startHour; h < startHour + visit.duration; h++) {
-const currentSlotKey = `${week}-${day}-${h}`;
-if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][currentSlotKey]) {
-delete state.scheduledSlots[state.ui.currentPeriod][currentSlotKey];
-}
-}
-
-// Clean up empty period if needed
-if (state.scheduledSlots[state.ui.currentPeriod] && Object.keys(state.scheduledSlots[state.ui.currentPeriod]).length === 0) {
-delete state.scheduledSlots[state.ui.currentPeriod];
-}
-
-saveState();
-renderApp();
-}
-
-function handlePeriodChange(e) {
-const newPeriod = e.target.value;
-if (newPeriod !== state.ui.currentPeriod) {
-state.ui.currentPeriod = newPeriod;
-generateVisitsForPeriod(newPeriod, state.userProfile.restaurants);
-saveState();
-renderApp();
-}
-}
-
-function handleResetCalendar() {
-if (confirm('Are you sure you want to reset all scheduled visits for this period?')) {
-if (state.scheduledSlots[state.ui.currentPeriod]) {
-// Update visit counts
-for (const slotKey in state.scheduledSlots[state.ui.currentPeriod]) {
-const slot = state.scheduledSlots[state.ui.currentPeriod][slotKey];
-if (slot.type === 'PLACED') {
-const visit = state.visits.find(v => v.id === slot.visitId);
-if (visit) {
-visit.scheduled--;
-visit.remaining++;
-}
-}
-}
-
-// Remove all slots for this period
-delete state.scheduledSlots[state.ui.currentPeriod];
-
-// Save state and re-render
-saveState();
-renderApp();
-}
-}
-}
-
-async function handleDownloadPDF() {
-const { jsPDF } = window.jspdf;
-const doc = new jsPDF('p', 'mm', 'a4'); // Portrait, mm units, A4 size
-
-const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
-if (!currentPeriodData) return;
-
-// --- Define Brand Colors (matching your Tailwind/CSS for consistency) ---
-const CAVA_BLUE = '#009EF4';
-const CAVA_YELLOW = '#F9D000';
-const CAVA_FUCHSIA = '#DA3D9D';
-const CAVA_GRAY_TEXT = '#1F2937'; // Near black, Tailwind gray-800 equivalent
-
-// --- Layout Constants ---
-let yOffset = 20; // Initial Y position
-const marginX = 20; // Left and right margins
-const pageHeight = doc.internal.pageSize.getHeight();
-const pageWidth = doc.internal.pageSize.getWidth();
-const contentWidth = pageWidth - (2 * marginX);
-
-const LINE_HEIGHT_SM = 5;  // For smaller text like dates
-const LINE_HEIGHT_MD = 7;  // For visit details
-const LINE_HEIGHT_LG = 10; // For section headers
-
-// --- Helper to add a new page with header ---
-const addNewPage = (doc) => {
-doc.addPage();
-yOffset = 20; // Reset Y-offset for new page
-// Add a continuation header if desired, subtle way to tie pages
-doc.setFontSize(10);
-doc.setTextColor(CAVA_GRAY_TEXT);
-doc.setFont("helvetica", "normal");
-doc.text("Schedule Continued...", marginX, 10);
-};
-
-// Format date helper
-const formatDate = (date) => {
-return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-};
-
-// --- Page 1: Title Section ---
-doc.setFont("helvetica", "bold");
-doc.setFontSize(28); // Bold title
-doc.setTextColor(CAVA_BLUE);
-doc.text("CAVA Ops Leader Visit Schedule", pageWidth / 2, yOffset, { align: "center" });
-yOffset += LINE_HEIGHT_LG * 1.5;
-
-doc.setFontSize(18); // Subtitle
-doc.setTextColor(CAVA_GRAY_TEXT);
-doc.text(`${state.userProfile.name || 'Your Name'} - Period ${state.ui.currentPeriod}`, pageWidth / 2, yOffset, { align: "center" });
-yOffset += LINE_HEIGHT_LG * 0.8; // Smaller gap
-
-doc.setFontSize(12); // Date range
-doc.setTextColor(CAVA_GRAY_TEXT);
-doc.text(`${formatDate(currentPeriodData.startDate)} - ${formatDate(currentPeriodData.endDate)}`, pageWidth / 2, yOffset, { align: "center" });
-yOffset += LINE_HEIGHT_LG * 2; // Extra space after main header
-
-// Add a visual separator (simple line)
-doc.setDrawColor(CAVA_YELLOW); // Yellow line
-doc.setLineWidth(0.5);
-doc.line(marginX, yOffset, pageWidth - marginX, yOffset);
-yOffset += LINE_HEIGHT_LG;
-
-// --- Get and Sort Scheduled Visits ---
-const scheduledVisitsInPeriod = [];
-if (state.scheduledSlots[state.ui.currentPeriod]) {
-for (const slotKey in state.scheduledSlots[state.ui.currentPeriod]) {
-const slot = state.scheduledSlots[state.ui.currentPeriod][slotKey];
-
-// Only process PLACED visits, as BLOCKED are covered by their parent
-if (slot.type === 'PLACED') {
-const visit = state.visits.find(v => v.id === slot.visitId);
-
-if (visit) {
-const [weekIndex, dayOfWeek, hour] = slotKey.split('-').map(Number);
-
-// Calculate the actual date for this slot (consistent with calendar)
-const periodStartDate = currentPeriodData.startDate;
-// Create correct date by properly cloning base date instead of mutating
-const baseDate = new Date(currentPeriodData.startDate.getTime());
-baseDate.setDate(baseDate.getDate() + (weekIndex * 7) + (dayOfWeek - 1));
-const finalDateForSort = new Date(baseDate);
-finalDateForSort.setHours(hour, 0, 0, 0);
-
-scheduledVisitsInPeriod.push({
-date: finalDateForSort, // Actual Date object for perfect sorting
-visit: visit,
-hour: hour,
-// Store original slot details for display
-week: weekIndex,
-day: dayOfWeek
-});
-}
-}
-}
-}
-
-// Sort visits chronologically
-scheduledVisitsInPeriod.sort((a, b) => a.date - b.date);
-
-// --- Render Agenda Content ---
-let currentDayFormatted = null;
-
-if (scheduledVisitsInPeriod.length === 0) {
-doc.setFontSize(14);
-doc.setTextColor(CAVA_GRAY_TEXT);
-doc.text("No visits scheduled for this period.", pageWidth / 2, yOffset + LINE_HEIGHT_LG, { align: "center" });
-} else {
-scheduledVisitsInPeriod.forEach(item => {
-const visit = item.visit;
-const slotDate = item.date;
-
-// Check for new page before drawing
-if (yOffset + (LINE_HEIGHT_MD * 3) > pageHeight - marginX) { // Estimate space needed for next entry
-addNewPage(doc);
-}
-
-// Check for new day header
-const dayOnlyFormatted = slotDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-if (dayOnlyFormatted !== currentDayFormatted) {
-yOffset += LINE_HEIGHT_MD * 1.5; // Space before new day section
-doc.setFontSize(14); // Day header font size
-doc.setTextColor(CAVA_FUCHSIA); // Fuchsia for day
-doc.setFont("helvetica", "bold");
-doc.text(dayOnlyFormatted, marginX, yOffset);
-yOffset += LINE_HEIGHT_MD * 1.2; // Space after day header
-currentDayFormatted = dayOnlyFormatted;
-}
-
-// Visit details line
-doc.setFontSize(10); // Visit detail font size
-doc.setTextColor(CAVA_GRAY_TEXT); // Gray for details
-doc.setFont("helvetica", "normal");
-
-// Determine color for bullet based on visit type (optional, but slick)
-let bulletColor = CAVA_GRAY_TEXT;
-if (visit.type === 'QRA') {
-bulletColor = CAVA_BLUE;
-// Temporarily modify display names for PDF
-if (visit.type === 'QRA') visit.type = 'Quality Restaurant Audit (QRA)';
-else if (visit.type === 'Guest Experience') visit.type = 'Guest Experience Night/Weekend Visit';
-else if (visit.type === 'GM Impact') visit.type = 'GM Impact Plan Conversation';
-else if (visit.type === 'Competency Champion') visit.type = 'Competency Champion Training';
-}
-else if (visit.type === 'GM Impact') bulletColor = CAVA_FUCHSIA;
-else if (visit.type === 'Guest Experience') bulletColor = CAVA_YELLOW;
-
-doc.setFillColor(bulletColor); // Set fill color for circle
-doc.circle(marginX + 2, yOffset - LINE_HEIGHT_MD / 2 + 1, 1.5, 'F'); // Filled circle bullet
-
-const visitText = `${formatTimeRange(item.hour, visit.duration)} - ${visit.type} at ${visit.location}`;
-const splitText = doc.splitTextToSize(visitText, contentWidth - 10); // Indent text
-
-doc.text(splitText, marginX + 7, yOffset); // Text after bullet
-yOffset += (splitText.length * LINE_HEIGHT_MD); // Adjust Y for wrapped lines
-yOffset += LINE_HEIGHT_SM * 0.8; // Small space after each visit entry
-});
-}
-
-// --- Save the PDF ---
-const fileName = `${state.userProfile.name || 'CAVA'} - Period ${state.ui.currentPeriod} Agenda.pdf`;
-doc.save(fileName);
-}
-
-function bindEventListeners() {
-// Setup modal
-document.getElementById('setupRestaurantCountInput').addEventListener('input', function() {
-const count = parseInt(this.value);
-if (!isNaN(count) && count >= 1 && count <= 20) {
-renderRestaurantNameInputs(count);
-}
-});
-
-document.getElementById('startSchedulingButton').addEventListener('click', handleSetupSubmit);
-document.getElementById('closeSetupModalBtn').addEventListener('click', function() {
-state.ui.isSetupModalOpen = false;
-renderApp();
-});
-
-// Visit tiles drag and drop
-const visitBankContainer = document.getElementById('visitBankContainer');
-visitBankContainer.addEventListener('dragstart', handleDragStart);
-visitBankContainer.addEventListener('dragend', handleDragEnd);
-
-// Calendar drop zones
-const calendarContainer = document.getElementById('calendarContainer');
-calendarContainer.addEventListener('dragover', handleDragOver);
-calendarContainer.addEventListener('dragleave', handleDragLeave);
-calendarContainer.addEventListener('drop', handleDrop);
-
-// Visit deletion
-calendarContainer.addEventListener('click', handleDeleteVisit);
-
-// Period change is now handled directly in renderHeader via tab clicks
-
-// Edit setup
-document.getElementById('editSetupButton').addEventListener('click', function() {
-state.ui.isSetupModalOpen = true;
-renderApp();
-});
-
-// Reset calendar
-document.getElementById('resetCalendarButton').addEventListener('click', handleResetCalendar);
-
-// Download PDF
-document.getElementById('downloadPdfButton').addEventListener('click', handleDownloadPDF);
-
-// Instructions modal controls
-document.getElementById('instructionsButton').addEventListener('click', function() {
-document.getElementById('instructionsModal').classList.remove('hidden');
-});
-
-document.getElementById('closeInstructionsBtn').addEventListener('click', function() {
-document.getElementById('instructionsModal').classList.add('hidden');
-});
-}
-
-// Main function
-function main() {
-// Initialize state (loadState handles setup modal logic)
-loadState();
-
-// Set current period if not set
-if (!state.ui.currentPeriod) {
-state.ui.currentPeriod = findCurrentPeriod();
-}
-
-// Generate visits if we have restaurants
-if (state.userProfile.restaurants?.length > 0) {
-generateVisitsForPeriod(state.ui.currentPeriod, state.userProfile.restaurants);
-}
-
-// Render app
-renderApp();
-
-// Bind event listeners
-bindEventListeners();
-}
-
-// Run when DOM is loaded
-document.addEventListener('DOMContentLoaded', main);
-</script>
+            if (visit.color.includes('text-white')) {
+                visitDiv.classList.add('text-white');
+            } else {
+                visitDiv.classList.remove('text-white');
+            }
+
+            const deleteBtn = visitDiv.querySelector('.delete-visit');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', handleDeleteVisit);
+            }
+            
+            return visitDiv;
+        }
+
+        function renderCalendar() {
+            const calendarContainer = document.getElementById('calendarContainer');
+            calendarContainer.innerHTML = '';
+            
+            if (!state.ui.currentPeriod) return;
+            
+            // Find the current period data
+            const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
+            if (!currentPeriodData) return;
+
+            const alignedStart = new Date(currentPeriodData.startDate); // Already a Monday
+            
+            // Render 4 weeks
+            for (let weekIndex = 0; weekIndex < 4; weekIndex++) {
+                const weekStart = new Date(alignedStart);
+                weekStart.setDate(alignedStart.getDate() + weekIndex * 7);
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                const weekContainer = document.createElement('div');
+                weekContainer.id = `week-${weekIndex}`;
+                weekContainer.className = 'mb-8';
+                
+                const weekHeader = document.createElement('h3');
+                weekHeader.className = 'text-lg font-bold text-[#009ef4] mb-2';
+                weekHeader.textContent = `Week ${weekIndex + 1}: ${weekStart.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })} – ${weekEnd.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}`;
+                
+                if (state.userProfile.name) {
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'ml-2 text-[#da3d9d]';
+                    nameSpan.textContent = state.userProfile.name;
+                    weekHeader.appendChild(nameSpan);
+                }
+                
+                weekContainer.appendChild(weekHeader);
+                
+                // Create calendar table
+                const table = document.createElement('table');
+                table.className = 'w-full border-collapse';
+                
+                // Create table header (days of week)
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th class="w-16 h-12 border border-blue-200 sticky-time">Time</th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Mon</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 0))}</div>
+                        </th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Tue</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 1))}</div>
+                        </th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Wed</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 2))}</div>
+                        </th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Thu</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 3))}</div>
+                        </th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Fri</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 4))}</div>
+                        </th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Sat</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 5))}</div>
+                        </th>
+                        <th class="border border-gray-200 p-2 text-center sticky-day-header">
+                            <div class="font-bold">Sun</div>
+                            <div class="text-xs text-gray-600">${getDateString(addDays(weekStart, 6))}</div>
+                        </th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+                
+                // Create table body (time slots)
+                const tbody = document.createElement('tbody');
+                
+                // Hours from 8 AM to 10 PM
+                for (let hour = 8; hour <= 22; hour++) {
+                    const row = document.createElement('tr');
+                    row.className = 'hour-cell';
+                    
+                    // Time cell
+                    const timeCell = document.createElement('td');
+                    timeCell.className = 'w-16 border border-gray-200 bg-[#e6f7ff] p-1 sticky-time text-center text-xs';
+                    timeCell.textContent = format12Hour(hour);
+                    row.appendChild(timeCell);
+                    
+                    // Day cells (Monday to Sunday)
+                    for (let day = 1; day <= 7; day++) {
+                        const dayCell = document.createElement('td');
+                        dayCell.className = 'border border-gray-200 p-0 relative drop-zone';
+                        dayCell.dataset.week = weekIndex;
+                        dayCell.dataset.day = day;
+                        dayCell.dataset.hour = hour;
+                        
+                        const slotKey = `${weekIndex}-${day}-${hour}`;
+                        const scheduledSlot = state.scheduledSlots[state.ui.currentPeriod]?.[slotKey];
+
+                        // Apply base drop zone class for all interactive cells
+                        dayCell.classList.add('drop-zone');
+                        dayCell.addEventListener('dragover', handleDragOver);
+                        dayCell.addEventListener('dragleave', handleDragLeave);
+                        dayCell.addEventListener('drop', handleDrop);
+
+                        if (scheduledSlot) {
+                            // Remove drop-zone events if occupied
+                            dayCell.classList.remove('drop-zone');
+                            dayCell.removeEventListener('dragover', handleDragOver);
+                            dayCell.removeEventListener('dragleave', handleDragLeave);
+                            dayCell.removeEventListener('drop', handleDrop);
+
+                            if (scheduledSlot.type === 'PLACED') {
+                                const visit = state.visits.find(v => v.id === scheduledSlot.visitId);
+                                if (visit) {
+                                    const visitDiv = createScheduledVisitElement(visit, weekIndex, day, hour);
+                                    dayCell.appendChild(visitDiv);
+                                }
+                                dayCell.style.backgroundColor = 'transparent';
+                                dayCell.title = '';
+                            } else if (scheduledSlot.type === 'BLOCKED') {
+                                dayCell.style.backgroundColor = 'transparent';
+                                dayCell.classList.add('cursor-not-allowed');
+                                dayCell.title = 'This time is blocked by a multi-hour visit';
+                            }
+                        } else {
+                            dayCell.style.backgroundColor = '';
+                            dayCell.title = '';
+                        }
+                        
+                        row.appendChild(dayCell);
+                    }
+                    
+                    tbody.appendChild(row);
+                }
+                
+                table.appendChild(tbody);
+                weekContainer.appendChild(table);
+                calendarContainer.appendChild(weekContainer);
+            }
+            
+            // Show/hide reset button based on whether there are scheduled visits
+            const resetButton = document.getElementById('resetCalendarButton');
+            if (state.scheduledSlots[state.ui.currentPeriod] && Object.keys(state.scheduledSlots[state.ui.currentPeriod]).length > 0) {
+                resetButton.classList.remove('hidden');
+            } else {
+                resetButton.classList.add('hidden');
+            }
+        }
+
+        function getDateForWeekDay(weekIndex, dayOfWeek, periodStartDate) {
+            // dayOfWeek: 1=Monday, 2=Tuesday, ..., 7=Sunday
+            const date = new Date(periodStartDate);
+            
+            // Adjust to Monday of the current week
+            const currentDayOfWeek = date.getDay(); // 0=Sun, 1=Mon, etc.
+            const diffToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // Days to subtract to get Monday
+            
+            // Set to Monday of the first week
+            date.setDate(date.getDate() - diffToMonday + (weekIndex * 7));
+            
+            // Add days for the specific weekday (0=Monday, 6=Sunday)
+            date.setDate(date.getDate() + (dayOfWeek - 1));
+            
+            return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+        }
+
+        function renderApp() {
+            const appContainer = document.getElementById('appContainer');
+            const setupModal = document.getElementById('setupModal');
+            
+            if (state.ui.isSetupModalOpen) {
+                appContainer.classList.add('hidden'); // Main app hidden when modal is open
+                setupModal.classList.remove('hidden'); // Modal visible
+                renderSetupModal(); // Call render logic for the setup modal
+            } else {
+                appContainer.classList.remove('hidden'); // Main app visible when modal is closed
+                setupModal.classList.add('hidden'); // Modal hidden
+                
+                renderHeader();
+                
+                // Only render Visit Bank and Calendar if user profile and restaurants are definitively loaded.
+                // This prevents an empty-looking app when user data is incomplete.
+                if (state.userProfile.name && state.userProfile.restaurants?.length > 0) { // Added check for restaurants.length
+                    renderVisitBank();
+                    renderCalendar();
+                } else {
+                    // Optional: Add a message here if profile is incomplete and app is visible
+                    // e.g., calendarContainer.innerHTML = '<p class="text-center text-gray-500 py-12">Please complete your profile to see the calendar.</p>';
+                    // This would be visible if a user somehow closed the setup modal prematurely or deleted their restaurants.
+                    document.getElementById('calendarContainer').innerHTML = ''; // Clear old content if no profile
+                    document.getElementById('visitBankContainer').innerHTML = '<p class="text-gray-500 italic text-center py-4">Complete setup to create visits.</p>';
+                    document.getElementById('summaryStats').innerHTML = '<h4 class="font-semibold text-gray-700 mb-2">Summary</h4><p class="text-gray-500 text-center">N/A</p>';
+                }
+            }
+        }
+
+        // Event handlers
+        function handleDragStart(e) {
+            if (!e.target.dataset.visitId) return;
+            
+            state.ui.activeDragVisitId = e.target.dataset.visitId;
+            e.dataTransfer.setData('text/plain', e.target.dataset.visitId);
+            e.target.classList.add('opacity-30');
+        }
+
+        function handleDragEnd(e) {
+            if (!e.target.dataset.visitId) return;
+            
+            e.target.classList.remove('opacity-30');
+            state.ui.activeDragVisitId = null;
+        }
+
+        function handleDragOver(e) {
+            if (!e.target.classList.contains('drop-zone') || e.target.classList.contains('bg-gray-300')) {
+                return;
+            }
+            
+            e.preventDefault();
+            
+            // Check if this slot is available
+            const week = e.target.dataset.week;
+            const day = e.target.dataset.day;
+            const hour = parseInt(e.target.dataset.hour);
+            
+            const visit = state.visits.find(v => v.id === state.ui.activeDragVisitId);
+            if (!visit) return;
+            
+            // Check all hours this visit would occupy
+            let hasConflict = false;
+            for (let h = hour; h < hour + visit.duration; h++) {
+                const slotKey = `${week}-${day}-${h}`;
+                
+                if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][slotKey]) {
+                    hasConflict = true;
+                    break;
+                }
+            }
+            
+            if (!hasConflict) {
+                e.target.classList.add('drop-zone-hover');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drop-zone-hover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drop-zone-hover');
+            
+            if (!state.ui.activeDragVisitId) return;
+            
+            // Ensure the drop happened on a valid, unblocked drop zone BEFORE trying to get visit data
+            if (!e.target.classList.contains('drop-zone') || e.target.classList.contains('bg-gray-300')) {
+                // Optionally, if state.ui.activeDragVisitId is set, it means a drag started
+                // but it was released on an invalid target. We just quietly clean up.
+                const draggedTile = document.getElementById(`visit-tile-${state.ui.activeDragVisitId}`);
+                if(draggedTile) draggedTile.classList.remove('opacity-30');
+                state.ui.activeDragVisitId = null; // Clear active drag ID
+                return; // Exit early as this is not a valid drop target for scheduling.
+            }
+
+            // Try to get from dataTransfer first, fall back to the actively dragged ID
+            let visitId = e.dataTransfer.getData('text/plain');
+            if (!visitId) {
+                visitId = state.ui.activeDragVisitId;
+            }
+            const visit = state.visits.find(v => v.id === visitId);
+            
+            if (!visit || visit.remaining <= 0) {
+                alert('This visit cannot be scheduled – no remaining instances or invalid visit');
+                const draggedTile = document.getElementById(`visit-tile-${visitId}`);
+                if (draggedTile) draggedTile.classList.remove('opacity-30');
+                state.ui.activeDragVisitId = null;
+                return;
+            }
+            
+            const week = e.target.dataset.week;
+            const day = e.target.dataset.day;
+            const hour = parseInt(e.target.dataset.hour);
+            
+            // Check all hours this visit would occupy
+            let hasConflict = false;
+            for (let h = hour; h < hour + visit.duration; h++) {
+                const slotKey = `${week}-${day}-${h}`;
+                
+                if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][slotKey]) {
+                    hasConflict = true;
+                    break;
+                }
+            }
+            
+            if (hasConflict) {
+                alert('Cannot schedule visit - time slot is already occupied');
+                return;
+            }
+            
+            // Update visit counts
+            visit.scheduled++;
+            visit.remaining--;
+            
+            // Update scheduled slots
+            if (!state.scheduledSlots[state.ui.currentPeriod]) {
+                state.scheduledSlots[state.ui.currentPeriod] = {};
+            }
+            
+            const startSlotKey = `${week}-${day}-${hour}`;
+            state.scheduledSlots[state.ui.currentPeriod][startSlotKey] = {
+                type: 'PLACED',
+                visitId: visitId,
+                startHour: hour // Add startHour to scheduledSlots entry
+            };
+            
+            // Mark subsequent hours as blocked
+            for (let h = hour + 1; h < hour + visit.duration; h++) {
+                const slotKey = `${week}-${day}-${h}`;
+                state.scheduledSlots[state.ui.currentPeriod][slotKey] = {
+                    type: 'BLOCKED',
+                    parentVisitId: visitId
+                };
+            }
+            
+            // Save state and re-render
+            saveState();
+            renderApp();
+            
+            state.ui.activeDragVisitId = null;
+        }
+
+        function handleDeleteVisit(e) {
+            if (!e.target.closest('button')) return;
+            
+            const button = e.target.closest('button');
+            const visitId = button.dataset.visitId;
+            const startHour = parseInt(button.dataset.startHour);
+            const week = parseInt(button.dataset.slotKey.split('-')[0]);
+            const day = parseInt(button.dataset.slotKey.split('-')[1]);
+            
+            if (!visitId || isNaN(startHour)) return;
+            
+            const visit = state.visits.find(v => v.id === visitId);
+            if (!visit) return;
+            
+            // Safely decrement scheduled count with bounds checking
+            if (visit.scheduled > 0) {
+                visit.scheduled--;
+                visit.remaining = Math.min(visit.required, visit.remaining + 1); // Ensure remaining doesn't exceed required
+            }
+            
+            // Remove all time slots for this visit
+            for (let h = startHour; h < startHour + visit.duration; h++) {
+                const currentSlotKey = `${week}-${day}-${h}`;
+                if (state.scheduledSlots[state.ui.currentPeriod] && state.scheduledSlots[state.ui.currentPeriod][currentSlotKey]) {
+                    delete state.scheduledSlots[state.ui.currentPeriod][currentSlotKey];
+                }
+            }
+            
+            // Clean up empty period if needed
+            if (state.scheduledSlots[state.ui.currentPeriod] && Object.keys(state.scheduledSlots[state.ui.currentPeriod]).length === 0) {
+                delete state.scheduledSlots[state.ui.currentPeriod];
+            }
+            
+            saveState();
+            renderApp();
+        }
+
+        function handlePeriodChange(e) {
+            const newPeriod = e.target.value;
+            if (newPeriod !== state.ui.currentPeriod) {
+                state.ui.currentPeriod = newPeriod;
+                generateVisitsForPeriod(newPeriod, state.userProfile.restaurants);
+                saveState();
+                renderApp();
+            }
+        }
+
+        function handleResetCalendar() {
+            if (confirm('Are you sure you want to reset all scheduled visits for this period?')) {
+                if (state.scheduledSlots[state.ui.currentPeriod]) {
+                    // Update visit counts
+                    for (const slotKey in state.scheduledSlots[state.ui.currentPeriod]) {
+                        const slot = state.scheduledSlots[state.ui.currentPeriod][slotKey];
+                        if (slot.type === 'PLACED') {
+                            const visit = state.visits.find(v => v.id === slot.visitId);
+                            if (visit) {
+                                visit.scheduled--;
+                                visit.remaining++;
+                            }
+                        }
+                    }
+                    
+                    // Remove all slots for this period
+                    delete state.scheduledSlots[state.ui.currentPeriod];
+                    
+                    // Save state and re-render
+                    saveState();
+                    renderApp();
+                }
+            }
+        }
+
+        async function handleDownloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait, mm units, A4 size
+            
+            const currentPeriodData = state.fiscalCalendar.find(p => p.period === state.ui.currentPeriod);
+            if (!currentPeriodData) return;
+            
+            // --- Define Brand Colors (matching your Tailwind/CSS for consistency) ---
+            const CAVA_BLUE = '#009EF4';
+            const CAVA_YELLOW = '#F9D000';
+            const CAVA_FUCHSIA = '#DA3D9D';
+            const CAVA_GRAY_TEXT = '#1F2937'; // Near black, Tailwind gray-800 equivalent
+            
+            // --- Layout Constants ---
+            let yOffset = 20; // Initial Y position
+            const marginX = 20; // Left and right margins
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const contentWidth = pageWidth - (2 * marginX);
+            
+            const LINE_HEIGHT_SM = 5;  // For smaller text like dates
+            const LINE_HEIGHT_MD = 7;  // For visit details
+            const LINE_HEIGHT_LG = 10; // For section headers
+            
+            // --- Helper to add a new page with header ---
+            const addNewPage = (doc) => {
+                doc.addPage();
+                yOffset = 20; // Reset Y-offset for new page
+                // Add a continuation header if desired, subtle way to tie pages
+                doc.setFontSize(10);
+                doc.setTextColor(CAVA_GRAY_TEXT);
+                doc.setFont("helvetica", "normal");
+                doc.text("Schedule Continued...", marginX, 10);
+            };
+            
+            // Format date helper
+            const formatDate = (date) => {
+                return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            };
+            
+            // --- Page 1: Title Section ---
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(28); // Bold title
+            doc.setTextColor(CAVA_BLUE);
+            doc.text("CAVA Ops Leader Visit Schedule", pageWidth / 2, yOffset, { align: "center" });
+            yOffset += LINE_HEIGHT_LG * 1.5;
+            
+            doc.setFontSize(18); // Subtitle
+            doc.setTextColor(CAVA_GRAY_TEXT);
+            doc.text(`${state.userProfile.name || 'Your Name'} - Period ${state.ui.currentPeriod}`, pageWidth / 2, yOffset, { align: "center" });
+            yOffset += LINE_HEIGHT_LG * 0.8; // Smaller gap
+            
+            doc.setFontSize(12); // Date range
+            doc.setTextColor(CAVA_GRAY_TEXT);
+            doc.text(`${formatDate(currentPeriodData.startDate)} - ${formatDate(currentPeriodData.endDate)}`, pageWidth / 2, yOffset, { align: "center" });
+            yOffset += LINE_HEIGHT_LG * 2; // Extra space after main header
+            
+            // Add a visual separator (simple line)
+            doc.setDrawColor(CAVA_YELLOW); // Yellow line
+            doc.setLineWidth(0.5);
+            doc.line(marginX, yOffset, pageWidth - marginX, yOffset);
+            yOffset += LINE_HEIGHT_LG;
+            
+            // --- Get and Sort Scheduled Visits ---
+            const scheduledVisitsInPeriod = [];
+            if (state.scheduledSlots[state.ui.currentPeriod]) {
+                for (const slotKey in state.scheduledSlots[state.ui.currentPeriod]) {
+                    const slot = state.scheduledSlots[state.ui.currentPeriod][slotKey];
+                    
+                    // Only process PLACED visits, as BLOCKED are covered by their parent
+                    if (slot.type === 'PLACED') {
+                        const visit = state.visits.find(v => v.id === slot.visitId);
+                        
+                        if (visit) {
+                            const [weekIndex, dayOfWeek, hour] = slotKey.split('-').map(Number);
+                            
+                            // Calculate the actual date for this slot (consistent with calendar)
+                            const periodStartDate = currentPeriodData.startDate;
+                            // Create correct date by properly cloning base date instead of mutating
+                            const baseDate = new Date(currentPeriodData.startDate.getTime());
+                            baseDate.setDate(baseDate.getDate() + (weekIndex * 7) + (dayOfWeek - 1));
+                            const finalDateForSort = new Date(baseDate);
+                            finalDateForSort.setHours(hour, 0, 0, 0);
+                            
+                            scheduledVisitsInPeriod.push({
+                                date: finalDateForSort, // Actual Date object for perfect sorting
+                                visit: visit,
+                                hour: hour,
+                                // Store original slot details for display
+                                week: weekIndex,
+                                day: dayOfWeek
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Sort visits chronologically
+            scheduledVisitsInPeriod.sort((a, b) => a.date - b.date);
+            
+            // --- Render Agenda Content ---
+            let currentDayFormatted = null;
+            
+            if (scheduledVisitsInPeriod.length === 0) {
+                doc.setFontSize(14);
+                doc.setTextColor(CAVA_GRAY_TEXT);
+                doc.text("No visits scheduled for this period.", pageWidth / 2, yOffset + LINE_HEIGHT_LG, { align: "center" });
+            } else {
+                scheduledVisitsInPeriod.forEach(item => {
+                    const visit = item.visit;
+                    const slotDate = item.date;
+                    
+                    // Check for new page before drawing
+                    if (yOffset + (LINE_HEIGHT_MD * 3) > pageHeight - marginX) { // Estimate space needed for next entry
+                        addNewPage(doc);
+                    }
+                    
+                    // Check for new day header
+                    const dayOnlyFormatted = slotDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                    if (dayOnlyFormatted !== currentDayFormatted) {
+                        yOffset += LINE_HEIGHT_MD * 1.5; // Space before new day section
+                        doc.setFontSize(14); // Day header font size
+                        doc.setTextColor(CAVA_FUCHSIA); // Fuchsia for day
+                        doc.setFont("helvetica", "bold");
+                        doc.text(dayOnlyFormatted, marginX, yOffset);
+                        yOffset += LINE_HEIGHT_MD * 1.2; // Space after day header
+                        currentDayFormatted = dayOnlyFormatted;
+                    }
+                    
+                    // Visit details line
+                    doc.setFontSize(10); // Visit detail font size
+                    doc.setTextColor(CAVA_GRAY_TEXT); // Gray for details
+                    doc.setFont("helvetica", "normal");
+                    
+                    // Determine color for bullet based on visit type (optional, but slick)
+                    let bulletColor = CAVA_GRAY_TEXT;
+                    if (visit.type === 'QRA') {
+                        bulletColor = CAVA_BLUE;
+                        // Temporarily modify display names for PDF
+                        if (visit.type === 'QRA') visit.type = 'Quality Restaurant Audit (QRA)';
+                        else if (visit.type === 'Guest Experience') visit.type = 'Guest Experience Night/Weekend Visit';
+                        else if (visit.type === 'GM Impact') visit.type = 'GM Impact Plan Conversation';
+                        else if (visit.type === 'Competency Champion') visit.type = 'Competency Champion Training';
+                    }
+                    else if (visit.type === 'GM Impact') bulletColor = CAVA_FUCHSIA;
+                    else if (visit.type === 'Guest Experience') bulletColor = CAVA_YELLOW;
+                    
+                    doc.setFillColor(bulletColor); // Set fill color for circle
+                    doc.circle(marginX + 2, yOffset - LINE_HEIGHT_MD / 2 + 1, 1.5, 'F'); // Filled circle bullet
+                    
+                    const visitText = `${formatTimeRange(item.hour, visit.duration)} - ${visit.type} at ${visit.location}`;
+                    const splitText = doc.splitTextToSize(visitText, contentWidth - 10); // Indent text
+                    
+                    doc.text(splitText, marginX + 7, yOffset); // Text after bullet
+                    yOffset += (splitText.length * LINE_HEIGHT_MD); // Adjust Y for wrapped lines
+                    yOffset += LINE_HEIGHT_SM * 0.8; // Small space after each visit entry
+                });
+            }
+            
+            // --- Save the PDF ---
+            const fileName = `${state.userProfile.name || 'CAVA'} - Period ${state.ui.currentPeriod} Agenda.pdf`;
+            doc.save(fileName);
+        }
+
+        function bindEventListeners() {
+            // Setup modal
+            document.getElementById('setupRestaurantCountInput').addEventListener('input', function() {
+                const count = parseInt(this.value);
+                if (!isNaN(count) && count >= 1 && count <= 20) {
+                    renderRestaurantNameInputs(count);
+                }
+            });
+            
+            document.getElementById('startSchedulingButton').addEventListener('click', handleSetupSubmit);
+            document.getElementById('closeSetupModalBtn').addEventListener('click', function() {
+                state.ui.isSetupModalOpen = false;
+                renderApp();
+            });
+            
+            // Visit tiles drag and drop
+            const visitBankContainer = document.getElementById('visitBankContainer');
+            visitBankContainer.addEventListener('dragstart', handleDragStart);
+            visitBankContainer.addEventListener('dragend', handleDragEnd);
+            
+            // Calendar drop zones
+            const calendarContainer = document.getElementById('calendarContainer');
+            calendarContainer.addEventListener('dragover', handleDragOver);
+            calendarContainer.addEventListener('dragleave', handleDragLeave);
+            calendarContainer.addEventListener('drop', handleDrop);
+            
+            // Visit deletion
+            calendarContainer.addEventListener('click', handleDeleteVisit);
+            
+            // Period change is now handled directly in renderHeader via tab clicks
+            
+            // Edit setup
+            document.getElementById('editSetupButton').addEventListener('click', function() {
+                state.ui.isSetupModalOpen = true;
+                renderApp();
+            });
+            
+            // Reset calendar
+            document.getElementById('resetCalendarButton').addEventListener('click', handleResetCalendar);
+            
+            // Download PDF
+            document.getElementById('downloadPdfButton').addEventListener('click', handleDownloadPDF);
+            
+            // Instructions modal controls
+            document.getElementById('instructionsButton').addEventListener('click', function() {
+                document.getElementById('instructionsModal').classList.remove('hidden');
+            });
+            
+            document.getElementById('closeInstructionsBtn').addEventListener('click', function() {
+                document.getElementById('instructionsModal').classList.add('hidden');
+            });
+        }
+
+        // Main function
+        function main() {
+            // Initialize state (loadState handles setup modal logic)
+            loadState();
+            
+            // Set current period if not set
+            if (!state.ui.currentPeriod) {
+                state.ui.currentPeriod = findCurrentPeriod();
+            }
+            
+            // Generate visits if we have restaurants
+            if (state.userProfile.restaurants?.length > 0) {
+                generateVisitsForPeriod(state.ui.currentPeriod, state.userProfile.restaurants);
+            }
+            
+            // Render app
+            renderApp();
+            
+            // Bind event listeners
+            bindEventListeners();
+        }
+
+        // Run when DOM is loaded
+        document.addEventListener('DOMContentLoaded', main);
+    </script>
 </body>
-</html>
 </html>
